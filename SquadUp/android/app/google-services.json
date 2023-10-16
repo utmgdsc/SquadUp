@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "793452515375",
+    "project_id": "squadup-de981",
+    "storage_bucket": "squadup-de981.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:793452515375:android:8542c1bbe9646b07e136da",
+        "android_client_info": {
+          "package_name": "com.squadup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqzMgAntcVALAfmIcebGspFg61PDAkd_I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

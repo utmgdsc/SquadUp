@@ -21,7 +21,6 @@ const Tab = createBottomTabNavigator();
 
 export default function MainContainer(){
     return(
-        <NavigationContainer>
             <Tab.Navigator
                 initialRouteName={homeName}
                 screenOptions={({route}) => ({
@@ -51,7 +50,6 @@ export default function MainContainer(){
                     style: {padding: 5, height: 60, backgroundColor: 'orange' }
                     
                 })}
-
             >
 
                 <Tab.Screen name={homeName} component={MainScreen}/>
@@ -62,9 +60,6 @@ export default function MainContainer(){
                 
 
             </Tab.Navigator>
-
-
-        </NavigationContainer>
 
     );
 }

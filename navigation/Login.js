@@ -21,6 +21,7 @@ const Login = () => {
             alert("Login successful");
         } catch (error) {
             console.log(error);
+            alert("Login failed: Invalid email or password");
         } finally {
             setLoading(false);
         }
@@ -33,7 +34,7 @@ const Login = () => {
             alert("Registration successful")
         } catch (error) {
             console.log(error);
-            alert("Login failed: " + error.message);
+            alert("Registration failed: " + error.message);
         } finally {
             setLoading(false);
         }
@@ -41,33 +42,37 @@ const Login = () => {
 
 
     return (
-        <View style={styles.container}>
+        <View style={styles.background}>
             <View style={styles.circle}>
             <Text style={styles.squadup}>SquadUp!</Text>
             </View>
-            <KeyboardAvoidingView behavior="padding"> 
-                    <TextInput value = {email} style={styles.input1} placeholder="Email" autoCapitalize="none"
-                    onChangeText={(text) => setEmail(text)}> 
-                    </TextInput>
-                    <TextInput secureTextEntry={true} value= {password} style={styles.input2} placeholder="Password" autoCapitalize="none"
-                    onChangeText={(text) => setPassword(text)}>
-                    </TextInput> 
-                { loading ? <ActivityIndicator/> 
-                    : <>
-                   
-                    <Pressable style= {styles.button}  onPress={(signIn)}>
-                       <Text>
-                            Login  
-                        </Text>
-                        </Pressable>
-                   
+                <KeyboardAvoidingView behavior="padding"> 
+                        <TextInput value = {email} style={styles.Email} placeholder="Email" autoCapitalize="none"
+                        onChangeText={(text) => setEmail(text)}> 
+                        </TextInput>
+                        <TextInput secureTextEntry={true} value= {password} style={styles.Password} placeholder="Password" autoCapitalize="none"
+                        onChangeText={(text) => setPassword(text)}>
+                        </TextInput> 
+                    { loading ? <ActivityIndicator/> 
+                        : <>
                     
-                    <Button title="Register New Account" onPress={(signUp)}/>
-                    </>
-                }
-            </KeyboardAvoidingView>
-            
-        </View>
+                        <Pressable style= {styles.Login}  onPress={(signIn)}>
+                        <Text style= {styles.buttonFont}>
+                                Login  
+                            </Text>
+                            </Pressable>
+                    
+                        
+                        <Pressable style={styles.Register} title="Register New Account" onPress={(signUp)}>
+                            <Text style= {styles.buttonFont}>
+                                Register New Account
+                            </Text>
+
+                        </Pressable>
+                        </>
+                    }
+                </KeyboardAvoidingView>
+            </View>
     )
     
 };
@@ -75,7 +80,7 @@ const Login = () => {
 export default Login;
 
 const styles = StyleSheet.create({
-    button: {
+    Login: {
         margin: 10,
         justifyContent: 'center',
         alignSelf: 'center',
@@ -85,26 +90,38 @@ const styles = StyleSheet.create({
         height: 30,
         width: 100,
         borderRadius: 50,
-        marginBottom: 30,
+        marginBottom: 10,
     },
-    container: {
+
+    Register: {
+        margin: 10,
+        justifyContent: 'center',
+        alignSelf: 'center',
+        alignItems: 'center',
+        backgroundColor: "#00ADB5",
+        fontFamily: "Helvetica Neue",
+        height: 30,
+        width: 200,
+        borderRadius: 50,
+        marginBottom: 110,
+    },
+
+    buttonFont: {
+        color: "#303841", 
+        fontSize: 15, 
+        fontFamily: "Helvetica Neue",
+        fontWeight: "bold", 
+        textAlign: "center", 
+    },
+
+    background: {
         flex: 1,
         justifyContent: 'center',
         cornerRadius: 50,
         backgroundColor: "#303841",
     },
     
-    input1: {
-        borderWidth: 1,
-        borderColor: "#00ADB5",
-        padding: 15,
-        marginBottom: 15,
-        marginHorizontal: 50,
-        backgroundColor: "#EEEEEE",
-        borderRadius: 50,
-        
-    },
-    input2: {
+    Email: {
         borderWidth: 2,
         borderColor: "#00ADB5",
         padding: 15,
@@ -112,28 +129,39 @@ const styles = StyleSheet.create({
         marginHorizontal: 50,
         backgroundColor: "#EEEEEE",
         borderRadius: 50,
-        
     },
+
+    Password: {
+        borderWidth: 2,
+        borderColor: "#00ADB5",
+        padding: 15,
+        marginBottom: 15,
+        marginHorizontal: 50,
+        backgroundColor: "#EEEEEE",
+        borderRadius: 50,
+    },
+
     squadup: {
         color: "#303841", 
         fontSize: 70, 
         fontFamily: "Helvetica Neue",
         fontWeight: "bold", 
         textAlign: "center", 
-        marginTop: 300,
+        marginTop: 400,
+        flex: 1,
     },
 
     circle: {
         height: 550,
         width: 600,
         borderRadius: 1550,
-        marginTop: -450,
-        marginBottom: 250,
+        marginTop: -300,
+        marginBottom: 300,
         justifyContent: 'center',
         alignSelf: 'center',
         backgroundColor: "#EEEEEE",
         opacity:0.93,
-        
+        flex: 1,
       }
 
 

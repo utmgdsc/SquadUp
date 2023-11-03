@@ -34,7 +34,19 @@ const Login = () => {
             alert("Registration successful")
         } catch (error) {
             console.log(error);
-            alert("Registration failed: " + error.message);
+            if (error.message.includes("auth/email-already-in-use")){
+                alert("Registration Failed: Email already in use");
+            } else if(error.message.includes("auth/invalid-email")){
+                alert("Registration Failed: Invalid email");
+            } else if(error.message.includes("auth/weak-password")){
+                alert("Registration Failed: Password must be at least 6 characters");
+            } else if (error.message.includes("auth/missing-email")){
+                alert("Registration Failed: Missing email");
+            } else if (error.message.includes("auth/missing-password")){
+                alert("Registration Failed: Missing password");  
+            }
+
+            // alert("Registration failed: " + error.message);
         } finally {
             setLoading(false);
         }
@@ -62,7 +74,6 @@ const Login = () => {
                             </Text>
                             </Pressable>
                     
-                        
                         <Pressable style={styles.Register} title="Register New Account" onPress={(signUp)}>
                             <Text style= {styles.buttonFont}>
                                 Register New Account

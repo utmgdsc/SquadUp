@@ -23,7 +23,6 @@ const Login = ({ navigation }) => {
             alert("Login successful");
 
         } catch (error) {
-            console.log(error);
             alert("Login failed: Invalid email or password");
         } finally {
             setLoading(false);
@@ -43,10 +42,10 @@ const Login = ({ navigation }) => {
             
                 <KeyboardAvoidingView behavior="padding"> 
                     
-                        <TextInput value = {email} style={styles.Email} placeholder="Email" autoCapitalize="none"
+                        <TextInput value = {email} style={styles.textBox} placeholder="Email" autoCapitalize="none"
                         onChangeText={(text) => setEmail(text)}> 
                         </TextInput>
-                        <TextInput secureTextEntry={true} value= {password} style={styles.Password} placeholder="Password" autoCapitalize="none"
+                        <TextInput secureTextEntry={true} value= {password} style={styles.textBox} placeholder="Password" autoCapitalize="none"
                         onChangeText={(text) => setPassword(text)}>
                         </TextInput> 
                     { loading ? <ActivityIndicator/> 
@@ -127,28 +126,17 @@ const styles = StyleSheet.create({
         textAlign: "center", 
         color: "#EEEEEE",
         marginBottom: 10,
-        
     },
+
     signInText: {
         fontSize: 20, 
         fontFamily: "Helvetica Neue",
         fontWeight: "bold", 
         textAlign: "center", 
         color: "#EEEEEE",
-        
     },
     
-    Email: {
-        borderWidth: 2,
-        borderColor: "#00ADB5",
-        padding: 15,
-        marginBottom: 15,
-        marginHorizontal: 50,
-        backgroundColor: "#EEEEEE",
-        borderRadius: 50,
-    },
-
-    Password: {
+    textBox: {
         borderWidth: 2,
         borderColor: "#00ADB5",
         padding: 15,
@@ -179,6 +167,5 @@ const styles = StyleSheet.create({
         opacity:0.95,
         flex: 1,
       }
-
 
 });

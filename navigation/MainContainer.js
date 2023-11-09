@@ -7,7 +7,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MainScreen from './screens/MainScreen';
 import Profile from './screens/Profile';
 import Squads from './screens/Squads';
-import Calendar from './screens/Calendar';
+import CalendarScreen from './screens/CalendarScreen';
 import Events from './screens/Events';
 
 // Screen names
@@ -22,7 +22,8 @@ const Tab = createBottomTabNavigator();
 export default function MainContainer(){
     return(
             <Tab.Navigator
-                initialRouteName={homeName}
+                initialRouteName={calendarName}
+                // initialRouteName={homeName}
                 screenOptions={({route}) => ({
                     tabBarIcon: ({ focused, color, size}) => {
                         let iconName;
@@ -55,7 +56,7 @@ export default function MainContainer(){
                 <Tab.Screen name={homeName} component={MainScreen}/>
                 <Tab.Screen name={profileName} component={Profile}/>
                 <Tab.Screen name={squadsName} component={Squads}/>
-                <Tab.Screen name={calendarName} component={Calendar}/>
+                <Tab.Screen name={calendarName} component={CalendarScreen}/>
                 <Tab.Screen name={eventsName} component={Events}/>
                 
 

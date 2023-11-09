@@ -25,7 +25,7 @@ export function addGoal(goalname, current, target){
 // DateTime must be a Timestamp object
 // Example for Dec25, 2023: addEvent("Drop-in Boxing", "Sports", Timestamp.fromDate(new Date("2023-03-25")));
 export function addEvent(eventname, type, DateTime){
-    addDoc(collection(db, "events"), {
+    return addDoc(collection(db, "events"), {
         name: eventname,
         type: type,
         DateTime: DateTime

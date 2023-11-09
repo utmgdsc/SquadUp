@@ -17,6 +17,10 @@ const Register = (navigation) => {
         setLoading(true);
 
         try {
+            if (name == "" || email == "" || password == ""){
+                alert("Registration Failed: Missing field(s)");
+                return;
+            }
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             addUser(userCredential.user.uid, name);
             alert("Registration successful")

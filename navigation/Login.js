@@ -1,68 +1,51 @@
-import {View, Text, Button, StyleSheet, TextInput, ActivityIndicator, KeyboardAvoidingView, Pressable} from 'react-native';
+import {View, Text, StyleSheet, TextInput, ActivityIndicator, KeyboardAvoidingView, Pressable} from 'react-native';
 import React from 'react';
 import { FIREBASE_AUTH } from '../firebaseConfig';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from 'react';
 
 
-const Login = () => {
+const Login = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    
 
     const auth = FIREBASE_AUTH;
 
-
+    const goToRegister = () => {
+        navigation.navigate('Register');
+      }
     const signIn = async () => {
         setLoading(true);
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            console.log(userCredential);
             alert("Login successful");
+
         } catch (error) {
-            console.log(error);
             alert("Login failed: Invalid email or password");
         } finally {
             setLoading(false);
         }
     }
-    const signUp = async () => {
-        setLoading(true);
-        try {
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            console.log(userCredential);
-            alert("Registration successful")
-        } catch (error) {
-            console.log(error);
-            if (error.message.includes("auth/email-already-in-use")){
-                alert("Registration Failed: Email already in use");
-            } else if(error.message.includes("auth/invalid-email")){
-                alert("Registration Failed: Invalid email");
-            } else if(error.message.includes("auth/weak-password")){
-                alert("Registration Failed: Password must be at least 6 characters");
-            } else if (error.message.includes("auth/missing-email")){
-                alert("Registration Failed: Missing email");
-            } else if (error.message.includes("auth/missing-password")){
-                alert("Registration Failed: Missing password");  
-            }
-
-            // alert("Registration failed: " + error.message);
-        } finally {
-            setLoading(false);
-        }
-    }
-
 
     return (
         <View style={styles.background}>
             <View style={styles.circle}>
             <Text style={styles.squadup}>SquadUp!</Text>
             </View>
+            <View style={styles.fonts}>
+                <Text style={styles.loginText}>Login</Text>
+                <Text style={styles.signInText}>Sign into your account!</Text>
+            </View>
+            
+            
                 <KeyboardAvoidingView behavior="padding"> 
-                        <TextInput value = {email} style={styles.Email} placeholder="Email" autoCapitalize="none"
+                    
+                        <TextInput value = {email} style={styles.textBox} placeholder="Email" autoCapitalize="none"
                         onChangeText={(text) => setEmail(text)}> 
                         </TextInput>
-                        <TextInput secureTextEntry={true} value= {password} style={styles.Password} placeholder="Password" autoCapitalize="none"
+                        <TextInput secureTextEntry={true} value= {password} style={styles.textBox} placeholder="Password" autoCapitalize="none"
                         onChangeText={(text) => setPassword(text)}>
                         </TextInput> 
                     { loading ? <ActivityIndicator/> 
@@ -74,9 +57,9 @@ const Login = () => {
                             </Text>
                             </Pressable>
                     
-                        <Pressable style={styles.Register} title="Register New Account" onPress={(signUp)}>
+                        <Pressable style={styles.Register} title="Register New Account" onPress={(goToRegister)}>
                             <Text style= {styles.buttonFont}>
-                                Register New Account
+                                Register Now
                             </Text>
 
                         </Pressable>
@@ -112,7 +95,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#00ADB5",
         fontFamily: "Helvetica Neue",
         height: 30,
-        width: 200,
+        width: 150,
         borderRadius: 50,
         marginBottom: 110,
     },
@@ -131,18 +114,29 @@ const styles = StyleSheet.create({
         cornerRadius: 50,
         backgroundColor: "#303841",
     },
-    
-    Email: {
-        borderWidth: 2,
-        borderColor: "#00ADB5",
-        padding: 15,
-        marginBottom: 15,
-        marginHorizontal: 50,
-        backgroundColor: "#EEEEEE",
-        borderRadius: 50,
+
+    fonts: {
+        marginBottom: 50,
     },
 
-    Password: {
+    loginText: {
+        fontSize: 40, 
+        fontFamily: "Helvetica Neue",
+        fontWeight: "bold", 
+        textAlign: "center", 
+        color: "#EEEEEE",
+        marginBottom: 10,
+    },
+
+    signInText: {
+        fontSize: 20, 
+        fontFamily: "Helvetica Neue",
+        fontWeight: "bold", 
+        textAlign: "center", 
+        color: "#EEEEEE",
+    },
+    
+    textBox: {
         borderWidth: 2,
         borderColor: "#00ADB5",
         padding: 15,
@@ -158,8 +152,7 @@ const styles = StyleSheet.create({
         fontFamily: "Helvetica Neue",
         fontWeight: "bold", 
         textAlign: "center", 
-        marginTop: 400,
-        flex: 1,
+        marginTop: 300,
     },
 
     circle: {
@@ -167,13 +160,12 @@ const styles = StyleSheet.create({
         width: 600,
         borderRadius: 1550,
         marginTop: -300,
-        marginBottom: 300,
+        marginBottom: 150,
         justifyContent: 'center',
         alignSelf: 'center',
         backgroundColor: "#EEEEEE",
-        opacity:0.93,
+        opacity:0.95,
         flex: 1,
       }
-
 
 });

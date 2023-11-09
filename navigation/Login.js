@@ -59,7 +59,7 @@ const Login = ({ navigation }) => {
                     
                         <Pressable style={styles.Register} title="Register New Account" onPress={(goToRegister)}>
                             <Text style= {styles.buttonFont}>
-                                Register New Account
+                                Register Now
                             </Text>
 
                         </Pressable>
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
         backgroundColor: "#00ADB5",
         fontFamily: "Helvetica Neue",
         height: 30,
-        width: 200,
+        width: 150,
         borderRadius: 50,
         marginBottom: 110,
     },

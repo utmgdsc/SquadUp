@@ -6,7 +6,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MainScreen from './screens/MainScreen';
 import Profile from './screens/Profile';
 import Squads from './screens/Squads';
-import Calendar from './screens/Calendar';
+import CalendarScreen from './screens/CalendarScreen';
 import Events from './screens/Events';
 
 // Screen names
@@ -52,11 +52,11 @@ export default function MainContainer(){
                 })}
             >
 
-                <Tab.Screen name={homeName} component={MainScreen}/>
-                <Tab.Screen name={profileName} component={Profile}/>
-                <Tab.Screen name={squadsName} component={Squads}/>
-                <Tab.Screen name={calendarName} component={Calendar}/>
-                <Tab.Screen name={eventsName} component={Events}/>
+                <Tab.Screen name={homeName} component={MainScreen} options={{headerShown:false}}/>
+                <Tab.Screen name={profileName} component={Profile} options={{headerShown:false}}/>
+                <Tab.Screen name={squadsName} component={Squads} options={{headerShown:false}}/>
+                <Tab.Screen name={calendarName} component={CalendarScreen} options={{headerShown:false}}/>
+                <Tab.Screen name={eventsName} component={Events} options={{headerShown:false}}/>
                 
 
             </Tab.Navigator>

@@ -6,7 +6,6 @@ import Login from './navigation/Login';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { FIREBASE_AUTH } from './firebaseConfig';
 import { useState, useEffect } from 'react';
-import CalendarScreen from './navigation/screens/CalendarScreen';
 
 const Stack = createNativeStackNavigator();
 export default function App(){
@@ -19,18 +18,12 @@ export default function App(){
   }, []);
   return(
   
-    // <NavigationContainer>
-    //   <Stack.Navigator initialRouteName="Login">
-    //     {user ? (<Stack.Screen name="MainContainer" component={MainContainer} options={{ headerShown:false }} />) : 
-    //     (<Stack.Screen name="Login" component={Login} options={{ headerShown:false }} />)}
-    //   </Stack.Navigator>
-    // </NavigationContainer>
-
-  <NavigationContainer>
-  <Stack.Navigator initialRouteName="MainContainer">
-    <Stack.Screen name="MainContainer" component={MainContainer} options={{ headerShown:false }} />
-  </Stack.Navigator>
-  </NavigationContainer>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Login">
+        {user ? (<Stack.Screen name="MainContainer" component={MainContainer} options={{ headerShown:false }} />) : 
+        (<Stack.Screen name="Login" component={Login} options={{ headerShown:false }} />)}
+      </Stack.Navigator>
+    </NavigationContainer>
 
   );
 }

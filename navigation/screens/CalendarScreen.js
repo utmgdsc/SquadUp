@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { View, Text, StyleSheet, Button, TextInput, Alert, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Button, TextInput, Alert, Modal, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import { addEvent } from '../../Database';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { Timestamp } from 'firebase/firestore';
 
-export default function CalendarScreen({navigation}) {
+export default function CalendarScreen({ navigation }) {
 
     // State Variables
     const [markedDates, setMarkedDates] = React.useState({});
@@ -27,23 +27,23 @@ export default function CalendarScreen({navigation}) {
             >
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
-                       {/* events holds the selected day's events - these are queried and displayed */}
-                       {Object.entries(events).map(([date, eventArray], index) => (
-                           <View key={index} style={styles.modalTextContainer}>
-                               {eventArray.map((event, eventIndex) => (
-                                <Text key={eventIndex} style={styles.modalText}>
-                                    {`Event Name: ${event.name} \n`}
-                                    {`Event Type: ${event.type} \n`}
-                                </Text>
-                               ))}
-                           </View>
-                       ))}
-                       <TouchableOpacity
-                           style={[styles.modalButton, styles.modalButtonClose]}
-                           onPress={onClose}
-                       > 
-                        <Text style={styles.textStyle}>Close</Text>
-                       </TouchableOpacity>
+                        {/* events holds the selected day's events - these are queried and displayed */}
+                        {Object.entries(events).map(([date, eventArray], index) => (
+                            <View key={index} style={styles.modalTextContainer}>
+                                {eventArray.map((event, eventIndex) => (
+                                    <Text key={eventIndex} style={styles.modalText}>
+                                        {`Event Name: ${event.name} \n`}
+                                        {`Event Type: ${event.type} \n`}
+                                    </Text>
+                                ))}
+                            </View>
+                        ))}
+                        <TouchableOpacity
+                            style={[styles.modalButton, styles.modalButtonClose]}
+                            onPress={onClose}
+                        >
+                            <Text style={styles.textStyle}>Close</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
@@ -52,25 +52,25 @@ export default function CalendarScreen({navigation}) {
 
     // Function to add an event to the Firestore database 
     const handleAddEvent = () => {
-        const dateTime = Timestamp.fromDate(new Date (selectedDate));
+        const dateTime = Timestamp.fromDate(new Date(selectedDate));
         addEvent(eventName, eventType, dateTime).then(() => {
             Alert.alert('Success! ', 'Event added to the calendar.');
             setEventName('');
             setEventType('');
         })
-        .catch((error) => {
-            console.error('Error adding event: ', error);
-            Alert.alert('Error', 'There was a problem adding the event.');
-        });
+            .catch((error) => {
+                console.error('Error adding event: ', error);
+                Alert.alert('Error', 'There was a problem adding the event.');
+            });
     };
 
     // Function to mark/select a date
     const markDate = (date) => {
-        const newMarkedDates = {...markedDates};
+        const newMarkedDates = { ...markedDates };
         if (selectedDate) {
             newMarkedDates[selectedDate] = { ...newMarkedDates[selectedDate], selected: false };
         }
-        newMarkedDates[date] = {...newMarkedDates[date], selected: true, selectedColor: 'blue'}
+        newMarkedDates[date] = { ...newMarkedDates[date], selected: true, selectedColor: 'blue' }
         setMarkedDates(newMarkedDates);
         setSelectedDate(date);
     }
@@ -83,17 +83,17 @@ export default function CalendarScreen({navigation}) {
         // Firestore is queried to put all of that day's data into events 
         const eventsRef = collection(db, "events");
         const eventsUnsubscribe = onSnapshot(eventsRef, (snapshot) => {
-        let eventsForDay = [];
-        snapshot.forEach((doc) => {
-           let data = doc.data();
-           let date = data.DateTime.toDate().toISOString().split('T')[0];
-           if(date == day.dateString && (data.name !== undefined && data.type !== undefined)) {
-                eventsForDay.push({ name: data.name, type: data.type, date: day.dateString });
-           }
-        });
-        setEvents({ [day.dateString]: eventsForDay });
-        // If the selected day has any events, the modal is displayed upon the click 
-        if (eventsForDay.length > 0) {setModalVisible(true);}
+            let eventsForDay = [];
+            snapshot.forEach((doc) => {
+                let data = doc.data();
+                let date = data.DateTime.toDate().toISOString().split('T')[0];
+                if (date == day.dateString && (data.name !== undefined && data.type !== undefined)) {
+                    eventsForDay.push({ name: data.name, type: data.type, date: day.dateString });
+                }
+            });
+            setEvents({ [day.dateString]: eventsForDay });
+            // If the selected day has any events, the modal is displayed upon the click 
+            if (eventsForDay.length > 0) { setModalVisible(true); }
         });
         return () => eventsUnsubscribe();
     };
@@ -107,11 +107,11 @@ export default function CalendarScreen({navigation}) {
             snapshot.docs.forEach((doc) => {
                 let data = doc.data();
                 let date = data.DateTime.toDate().toISOString().split('T')[0];
-                if(!newEvents[date]) {
+                if (!newEvents[date]) {
                     newEvents[date] = [];
                 }
                 newEvents[date].push({ name: data.name, type: data.type, date: date });
-                newMarkedDates[date] = {marked: true, dotColor: 'red'};
+                newMarkedDates[date] = { marked: true, dotColor: 'red' };
             });
             // Setting the marked dates and events
             setMarkedDates(newMarkedDates);
@@ -121,40 +121,43 @@ export default function CalendarScreen({navigation}) {
     }, []);
 
     // Rendering the CalendarScreen component
-    return(
-        <View style={styles.titleContainer}>
-            <Text style={styles.title}> Calendar </Text>
-            <Calendar 
-                style={styles.calendar} 
-                theme={calendarTheme} 
-                markedDates={markedDates}
-                onDayPress={onDayPress}
-            />
-            <EventModal
-                visible={isModalVisible}
-                onClose={() => setModalVisible(false)}
-                events={events}
-            />
-            <Text style={styles.addEventTitle}>Add an event for the highlighted day</Text>
-            <TextInput
-                style={styles.roundedInput}
-                onChangeText={setEventName}
-                value={eventName}
-                placeholder='Enter event name'
-            />
-            <TextInput
-                style={styles.roundedInput}
-                onChangeText={setEventType}
-                value={eventType}
-                placeholder='Enter event type'
-            />
-            <TouchableOpacity
-                style={[styles.modalButton, styles.modalButtonClose]}
-                onPress={handleAddEvent}
-            >
-            <Text style={styles.textStyle}>Submit</Text>
-            </TouchableOpacity>
-        </View>
+    return (
+        <KeyboardAvoidingView behavior='height' style={styles.keyboardStyle} keyboardVerticalOffset={30}>
+            <View style={styles.titleContainer}>
+                <Text style={styles.title}> Calendar </Text>
+
+                <Calendar
+                    style={styles.calendar}
+                    theme={calendarTheme}
+                    markedDates={markedDates}
+                    onDayPress={onDayPress}
+                />
+                <EventModal
+                    visible={isModalVisible}
+                    onClose={() => setModalVisible(false)}
+                    events={events}
+                />
+                <Text style={styles.addEventTitle}>Add an event for the highlighted day</Text>
+                <TextInput
+                    style={styles.roundedInput}
+                    onChangeText={setEventName}
+                    value={eventName}
+                    placeholder='Enter event name'
+                />
+                <TextInput
+                    style={styles.roundedInput}
+                    onChangeText={setEventType}
+                    value={eventType}
+                    placeholder='Enter event type'
+                />
+                <TouchableOpacity
+                    style={[styles.modalButton, styles.modalButtonClose]}
+                    onPress={handleAddEvent}
+                >
+                    <Text style={styles.textStyle}>Submit</Text>
+                </TouchableOpacity>
+            </View>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -169,14 +172,15 @@ const calendarTheme = {
 // Defining the styles for the CalendarScreen component
 const styles = StyleSheet.create({
     titleContainer: {
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        marginTop: 20
+        // display: 'flex', 
+        //alignItems: 'center', 
+        justifyContent: 'center',
+        flex: 1,
     },
     title: {
-        fontSize: 30, 
-        fontWeight: 'bold'
+        fontSize: 30,
+        alignSelf: 'center',
+        fontWeight: 'bold',
     },
     calendar: {
         borderRadius: 5,
@@ -185,7 +189,11 @@ const styles = StyleSheet.create({
         margin: 12,
         elevation: 5,
         borderWidth: 4,
-        borderColor: 'rgba(100, 100, 100, 0.2)'
+        borderColor: 'rgba(100, 100, 100, 0.2)',
+        alignSelf: 'center'
+    },
+    keyboardStyle: {
+        flex: 1,
     },
     roundedInput: {
         height: 40,
@@ -194,7 +202,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 10,
         padding: 10,
-        width: '80%'
+        justifyContent: 'center',
+        width: '80%',
+        alignSelf: 'center',
     },
     centeredView: {
         flex: 1,
@@ -210,8 +220,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: {
-          width: 0,
-          height: 2,
+            width: 0,
+            height: 2,
         },
         shadowOpacity: 0.25,
         shadowRadius: 4,
@@ -221,8 +231,9 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 10,
         elevation: 2,
-        marginTop: 20,
-        backgroundColor: '#2196F3'
+        backgroundColor: '#2196F3',
+        width: '50%',
+        alignSelf: 'center'
     },
     modalButtonClose: {
         backgroundColor: '#2196F3',
@@ -231,18 +242,19 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: 'bold',
         textAlign: 'center',
+        fontSize: 20
     },
     modalTextContainer: {
         marginBottom: 15,
         alignItems: 'center',
     },
     modalText: {
-        marginBottom: 15,
         textAlign: 'center',
     },
     addEventTitle: {
         fontWeight: 'bold',
         fontSize: 20,
-        paddingBottom: 10
+        paddingBottom: 10,
+        alignSelf: 'center',
     }
 });

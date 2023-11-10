@@ -22,8 +22,7 @@ const Tab = createBottomTabNavigator();
 export default function MainContainer(){
     return(
             <Tab.Navigator
-                initialRouteName={calendarName}
-                // initialRouteName={homeName}
+                initialRouteName={homeName}
                 screenOptions={({route}) => ({
                     tabBarIcon: ({ focused, color, size}) => {
                         let iconName;
@@ -53,11 +52,11 @@ export default function MainContainer(){
                 })}
             >
 
-                <Tab.Screen name={homeName} component={MainScreen}/>
-                <Tab.Screen name={profileName} component={Profile}/>
-                <Tab.Screen name={squadsName} component={Squads}/>
-                <Tab.Screen name={calendarName} component={CalendarScreen}/>
-                <Tab.Screen name={eventsName} component={Events}/>
+                <Tab.Screen name={homeName} component={MainScreen} options={{headerShown:false}}/>
+                <Tab.Screen name={profileName} component={Profile} options={{headerShown:false}}/>
+                <Tab.Screen name={squadsName} component={Squads} options={{headerShown:false}}/>
+                <Tab.Screen name={calendarName} component={CalendarScreen} options={{headerShown:false}}/>
+                <Tab.Screen name={eventsName} component={Events} options={{headerShown:false}}/>
                 
 
             </Tab.Navigator>

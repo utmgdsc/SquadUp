@@ -24,7 +24,7 @@ export default function App(){
       <Stack.Navigator initialRouteName="Login">
         {user ? (<Stack.Screen name="MainContainer" component={MainContainer} options={{ headerShown:false }} />) : 
         (<Stack.Screen name="Login" component={Login} options={{ headerShown:false }} />)}
-        {user ? (<Stack.Screen name="MainContainer" component={MainContainer} options={{ headerShown:false }} />) :
+        {user ? (<Stack.Screen name="MainContainer2" component={MainContainer} options={{ headerShown:false }} />) :
         <Stack.Screen name="Register" component={Register} options={{ headerShown: false }} />}
       </Stack.Navigator>
     </NavigationContainer>

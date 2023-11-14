@@ -1,4 +1,4 @@
-import { collection, addDoc, setDoc, doc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getDoc, documentId } from "firebase/firestore";
 import { db } from './firebaseConfig';
 
 /* 
@@ -104,7 +104,44 @@ Fetch Functions - To fetch data from existing documents inside the database,
 these are used to retrieve data about specific users, squads, etc.    
 */
 
-export function fetchUserEvents(uid) {
-    // not implemented yet
-    return 0   
+/* given uid (user id), returns a list of events with the format - 
+    [
+        {"DateTime": {"nanoseconds": 0, "seconds": 1700006400}, "name": "TestEvent", "type": "TestType "}, 
+        {"DateTime": {"nanoseconds": 605000000, "seconds": 1699459200}, "name": "Basketball", "type": "Sports"},
+        ... ,
+    ]
+*/
+export async function fetchUserEvents(uid) {
+    const eventID_list = []
+    const eventList = []
+
+    const userEventsRef = collection(db, "users_events_join");
+    const q = query(userEventsRef, where("userID", "==", uid));
+
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        //console.log(doc.id, " => ", doc.data().eventID);
+        eventID_list.push(doc.data().eventID)
+    })
+
+    const EventsRef = collection(db, "events");
+    for(i = 0; i < eventID_list.length; i++){
+        const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach((doc) => {
+            console.log(doc.id, " => ", doc.data());
+            eventList.push(doc.data());
+        })
+    }
+    
+    return eventList;
+
 }
+
+/*
+    Test functions (put in App.js to test for now):
+    joinUsertoEvent('JSVhKJSFRaeictUBPlcLJ7nczHb2', 'NjmmGri0YDY1hWbKP3Ry');
+    joinUsertoEvent('JSVhKJSFRaeictUBPlcLJ7nczHb2', 'zeiqc0ARW0DZqKtAsQLY');
+    fetchUserEvents('JSVhKJSFRaeictUBPlcLJ7nczHb2');
+*/
+

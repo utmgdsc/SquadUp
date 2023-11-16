@@ -142,8 +142,8 @@ export async function fetchUserEvents(uid) {
 
 /* given uid (user id), returns a list of goals with the format - 
     [
-        {"DateTime": {"nanoseconds": 0, "seconds": 1700006400}, "name": "TestEvent", "type": "TestType "}, 
-        {"DateTime": {"nanoseconds": 605000000, "seconds": 1699459200}, "name": "Basketball", "type": "Sports"},
+        {"completed": false, "current": 0, "name": "Run 10km this week.", "target": 10}, 
+        {"current": 150, "name": "Increase Squat PR by 5lbs.", "target": 155},
         ... ,
     ]
 */
@@ -172,6 +172,74 @@ export async function fetchUserGoals(uid) {
     
     return goalList;
 }
+
+/* given squadID, returns a list of events with the format - 
+    [
+        {"DateTime": {"nanoseconds": 0, "seconds": 1700006400}, "name": "TestEvent", "type": "TestType "}, 
+        {"DateTime": {"nanoseconds": 605000000, "seconds": 1699459200}, "name": "Basketball", "type": "Sports"},
+        ... ,
+    ]
+*/
+export async function fetchSquadEvents(squadID) {
+    const eventID_list = []
+    const eventList = []
+
+    const squadEventsRef = collection(db, "squad_events_join");
+    const q = query(squadEventsRef, where("squadID", "==", squadID));
+
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        //console.log(doc.id, " => ", doc.data().eventID);
+        eventID_list.push(doc.data().eventID)
+    })
+
+    const EventsRef = collection(db, "events");
+    for(i = 0; i < eventID_list.length; i++){
+        const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach((doc) => {
+            console.log(doc.id, " => ", doc.data());
+            eventList.push(doc.data());
+        })
+    }
+    
+    return eventList;
+}
+
+/* given squadID, returns a list of goals with the format - 
+    [
+        {"completed": false, "current": 0, "name": "Run 10km this week.", "target": 10}, 
+        {"current": 150, "name": "Increase Squat PR by 5lbs.", "target": 155},
+        ... ,
+    ]
+*/
+export async function fetchSquadGoals(squadID) {
+    const goalID_list = []
+    const goalList = []
+
+    const squadGoalsRef = collection(db, "squad_goals_join");
+    const q = query(squadGoalsRef, where("squadID", "==", squadID));
+
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        //console.log(doc.id, " => ", doc.data().eventID);
+        goalID_list.push(doc.data().goalID)
+    })
+
+    const GoalsRef = collection(db, "goals");
+    for(i = 0; i < goalID_list.length; i++){
+        const q2 = query(GoalsRef, where(documentId(), "==", goalID_list[i]));
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach((doc) => {
+            console.log(doc.id, " => ", doc.data());
+            goalList.push(doc.data());
+        })
+    }
+    
+    return goalList;
+}
+
+
 
 
 /*

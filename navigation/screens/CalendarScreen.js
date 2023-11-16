@@ -15,6 +15,7 @@ export default function CalendarScreen({ navigation }) {
     const [selectedDate, setSelectedDate] = React.useState('');
     const [isModalVisible, setModalVisible] = React.useState(false);
     const [events, setEvents] = React.useState({});
+    const [newEventAdded, setNewEventAdded] = React.useState(true);
 
     // Modal used to display events of a particular day 
     const EventModal = ({ visible, onClose, events }) => {
@@ -57,6 +58,7 @@ export default function CalendarScreen({ navigation }) {
             Alert.alert('Success! ', 'Event added to the calendar.');
             setEventName('');
             setEventType('');
+            setNewEventAdded(true);
         })
             .catch((error) => {
                 console.error('Error adding event: ', error);
@@ -100,25 +102,27 @@ export default function CalendarScreen({ navigation }) {
 
     // UseEffect hook to get events from Firestore when the component mounts
     React.useEffect(() => {
-        const unsubsribe = onSnapshot(collection(db, "events"), (snapshot) => {
-            let newMarkedDates = {};
-            let newEvents = {};
-            // Each event is extracted and spliced to retreive the data 
-            snapshot.docs.forEach((doc) => {
-                let data = doc.data();
-                let date = data.DateTime.toDate().toISOString().split('T')[0];
-                if (!newEvents[date]) {
-                    newEvents[date] = [];
-                }
-                newEvents[date].push({ name: data.name, type: data.type, date: date });
-                newMarkedDates[date] = { marked: true, dotColor: 'red' };
+        if (newEventAdded){
+            const unsubsribe = onSnapshot(collection(db, "events"), (snapshot) => {
+                let newMarkedDates = {};
+                let newEvents = {};
+                // Each event is extracted and spliced to retreive the data 
+                snapshot.docs.forEach((doc) => {
+                    let data = doc.data();
+                    let date = data.DateTime.toDate().toISOString().split('T')[0];
+                    if (!newEvents[date]) {
+                        newEvents[date] = [];
+                    }
+                    newEvents[date].push({ name: data.name, type: data.type, date: date });
+                    newMarkedDates[date] = { marked: true, dotColor: 'red' };
+                });
+                // Setting the marked dates and events
+                setMarkedDates(newMarkedDates);
+                setEvents(newEvents);
             });
-            // Setting the marked dates and events
-            setMarkedDates(newMarkedDates);
-            setEvents(newEvents);
-        });
-        return () => unsubsribe();
-    }, []);
+            return () => unsubsribe();
+        }
+    }, [newEventAdded]);
 
     // Rendering the CalendarScreen component
     return (

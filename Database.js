@@ -18,12 +18,15 @@ export function addSquad(squadname) {
     });
 }
 
-export function addGoal(goalname, current, target) {
-    addDoc(collection(db, "goals"), {
+// returns newly-created goal's id
+export async function addGoal(goalname, current, target) {
+    const docRef = await addDoc(collection(db, "goals"), {
         name: goalname,
         current: current,
         target: target
     });
+    console.log(docRef.id)
+    return docRef.id;
 }
 
 // type can only have two values: Sports or Workout
@@ -135,13 +138,48 @@ export async function fetchUserEvents(uid) {
     }
     
     return eventList;
-
 }
 
+/* given uid (user id), returns a list of goals with the format - 
+    [
+        {"DateTime": {"nanoseconds": 0, "seconds": 1700006400}, "name": "TestEvent", "type": "TestType "}, 
+        {"DateTime": {"nanoseconds": 605000000, "seconds": 1699459200}, "name": "Basketball", "type": "Sports"},
+        ... ,
+    ]
+*/
+export async function fetchUserGoals(uid) {
+    const goalID_list = []
+    const goalList = []
+
+    const userGoalsRef = collection(db, "users_goals_join");
+    const q = query(userGoalsRef, where("userID", "==", uid));
+
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        //console.log(doc.id, " => ", doc.data().eventID);
+        goalID_list.push(doc.data().goalID)
+    })
+
+    const GoalsRef = collection(db, "goals");
+    for(i = 0; i < goalID_list.length; i++){
+        const q2 = query(GoalsRef, where(documentId(), "==", goalID_list[i]));
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach((doc) => {
+            console.log(doc.id, " => ", doc.data());
+            goalList.push(doc.data());
+        })
+    }
+    
+    return goalList;
+}
+
+
 /*
-    Test functions (put in App.js to test for now):
-    joinUsertoEvent('JSVhKJSFRaeictUBPlcLJ7nczHb2', 'NjmmGri0YDY1hWbKP3Ry');
-    joinUsertoEvent('JSVhKJSFRaeictUBPlcLJ7nczHb2', 'zeiqc0ARW0DZqKtAsQLY');
-    fetchUserEvents('JSVhKJSFRaeictUBPlcLJ7nczHb2');
+    Test functions:
+    useEffect(async () => {
+    const goalid = await addGoal('Increase Squat PR by 5lbs.', 150, 155);
+    joinUsertoGoal('JSVhKJSFRaeictUBPlcLJ7nczHb2', goalid, Timestamp.fromDate(new Date("2023-03-25")), Timestamp.fromDate(new Date("2023-03-29")));
+    fetchUserGoals('JSVhKJSFRaeictUBPlcLJ7nczHb2');
+  }, []);
 */
 

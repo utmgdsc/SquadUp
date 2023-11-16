@@ -32,12 +32,13 @@ export async function addGoal(goalname, current, target) {
 // type can only have two values: Sports or Workout
 // DateTime must be a Timestamp object
 // Example for Dec25, 2023: addEvent("Drop-in Boxing", "Sports", Timestamp.fromDate(new Date("2023-03-25")));
-export function addEvent(eventname, type, DateTime) {
-    return addDoc(collection(db, "events"), {
+export async function addEvent(eventname, type, DateTime) {
+    const docRef = await addDoc(collection(db, "events"), {
         name: eventname,
         type: type,
         DateTime: DateTime
     });
+    return docRef.id;
 }
 
 export function addFriend(userid1, userid2) {

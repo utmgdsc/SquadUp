@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, Button, TextInput, Alert, Modal, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
-import { addEvent } from '../../Database';
+import { addEvent, fetchSquadEvents, fetchUserEvents, joinUsertoEvent } from '../../Database';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 import { Timestamp } from 'firebase/firestore';
@@ -16,6 +16,8 @@ export default function CalendarScreen({ navigation }) {
     const [isModalVisible, setModalVisible] = React.useState(false);
     const [events, setEvents] = React.useState({});
     const [newEventAdded, setNewEventAdded] = React.useState(true);
+    const uid = 123;
+    const squadid = 123;
 
     // Modal used to display events of a particular day 
     const EventModal = ({ visible, onClose, events }) => {
@@ -33,6 +35,12 @@ export default function CalendarScreen({ navigation }) {
                             <View key={index} style={styles.modalTextContainer}>
                                 {eventArray.map((event, eventIndex) => (
                                     <Text key={eventIndex} style={styles.modalText}>
+                                        {event.userOrSquad === "user" && (
+                                            <Text style={styles.modalHeaderText}>User Event</Text>
+                                        )}
+                                        {event.userOrSquad === "squad" && (
+                                            <Text style={styles.modalHeaderText}>Squad Event</Text>
+                                        )}
                                         {`Event Name: ${event.name} \n`}
                                         {`Event Type: ${event.type} \n`}
                                     </Text>
@@ -54,16 +62,23 @@ export default function CalendarScreen({ navigation }) {
     // Function to add an event to the Firestore database 
     const handleAddEvent = () => {
         const dateTime = Timestamp.fromDate(new Date(selectedDate));
-        addEvent(eventName, eventType, dateTime).then(() => {
-            Alert.alert('Success! ', 'Event added to the calendar.');
-            setEventName('');
-            setEventType('');
-            setNewEventAdded(true);
-        })
+        addEvent(eventName, eventType, dateTime).then((docRef) => {
+            const eventID = docRef.id;
+            joinUsertoEvent(uid, eventID).then(() => {
+                Alert.alert('Success! ', 'Event added to the calendar.');
+                setEventName('');
+                setEventType('');
+                setNewEventAdded(true);
+            })
             .catch((error) => {
-                console.error('Error adding event: ', error);
-                Alert.alert('Error', 'There was a problem adding the event.');
+                console.error('Error joining user to event: ', error);
+                Alert.alert('Error', 'There was a problem joining the event to the user.');
             });
+        })
+        .catch((error)  => {
+            console.error('Error adding event: ', error);
+            Alert.alert('Error', 'There was a problem adding the event.');
+        });
     };
 
     // Function to mark/select a date
@@ -78,51 +93,114 @@ export default function CalendarScreen({ navigation }) {
     }
 
     // Function to handle a day press 
-    const onDayPress = (day) => {
+    // const onDayPress = (day) => {
+    //     // Calling markDate to highlight the day 
+    //     markDate(day.dateString);
+
+    //     // Firestore is queried to put all of that day's data into events 
+    //     const eventsRef = collection(db, "events");
+    //     const eventsUnsubscribe = onSnapshot(eventsRef, (snapshot) => {
+    //         let eventsForDay = [];
+    //         snapshot.forEach((doc) => {
+    //             let data = doc.data();
+    //             let date = data.DateTime.toDate().toISOString().split('T')[0];
+    //             if (date == day.dateString && (data.name !== undefined && data.type !== undefined)) {
+    //                 eventsForDay.push({ name: data.name, type: data.type, date: day.dateString });
+    //             }
+    //         });
+    //         setEvents({ [day.dateString]: eventsForDay });
+    //         // If the selected day has any events, the modal is displayed upon the click 
+    //         if (eventsForDay.length > 0) { setModalVisible(true); }
+    //     });
+    //     return () => eventsUnsubscribe();
+    // };
+
+    const onDayPress = async (day) => {
         // Calling markDate to highlight the day 
         markDate(day.dateString);
-
-        // Firestore is queried to put all of that day's data into events 
-        const eventsRef = collection(db, "events");
-        const eventsUnsubscribe = onSnapshot(eventsRef, (snapshot) => {
-            let eventsForDay = [];
-            snapshot.forEach((doc) => {
-                let data = doc.data();
-                let date = data.DateTime.toDate().toISOString().split('T')[0];
+        try {
+            // Fetch user events for the selected day
+            const userEvents = await fetchUserEvents(uid);
+            userEvents.forEach((event) => {
+                let date = event.DateTime.toDate().toISOString().split('T')[0];
                 if (date == day.dateString && (data.name !== undefined && data.type !== undefined)) {
-                    eventsForDay.push({ name: data.name, type: data.type, date: day.dateString });
+                    eventsForDay.push({ name: data.name, type: data.type, date: day.dateString, userOrSquad: "user" });
+                }
+            });
+            const squadEvents = await fetchSquadEvents(squadid);
+            squadEvents.forEach((event) => {
+                let date = event.DateTime.toDate().toISOString().split('T')[0];
+                if (date == day.dateString && (data.name !== undefined && data.type !== undefined)) {
+                    eventsForDay.push({ name: data.name, type: data.type, date: day.dateString, userOrSquad: "squad" });
                 }
             });
             setEvents({ [day.dateString]: eventsForDay });
-            // If the selected day has any events, the modal is displayed upon the click 
             if (eventsForDay.length > 0) { setModalVisible(true); }
-        });
-        return () => eventsUnsubscribe();
+        } catch (error) {
+            console.error("Error fetching user events:", error)
+        }
     };
+
+    // UseEffect hook to get events from Firestore when the component mounts
+    // React.useEffect(() => {
+    //     if (newEventAdded){
+    //         const unsubsribe = onSnapshot(collection(db, "events"), (snapshot) => {
+    //             let newMarkedDates = {};
+    //             let newEvents = {};
+    //             // Each event is extracted and spliced to retreive the data 
+    //             snapshot.docs.forEach((doc) => {
+    //                 let data = doc.data();
+    //                 let date = data.DateTime.toDate().toISOString().split('T')[0];
+    //                 if (!newEvents[date]) {
+    //                     newEvents[date] = [];
+    //                 }
+    //                 newEvents[date].push({ name: data.name, type: data.type, date: date });
+    //                 newMarkedDates[date] = { marked: true, dotColor: 'red' };
+    //             });
+    //             // Setting the marked dates and events
+    //             setMarkedDates(newMarkedDates);
+    //             setEvents(newEvents);
+    //         });
+    //         return () => unsubsribe();
+    //     }
+    // }, [newEventAdded]);
 
     // UseEffect hook to get events from Firestore when the component mounts
     React.useEffect(() => {
         if (newEventAdded){
-            const unsubsribe = onSnapshot(collection(db, "events"), (snapshot) => {
-                let newMarkedDates = {};
-                let newEvents = {};
-                // Each event is extracted and spliced to retreive the data 
-                snapshot.docs.forEach((doc) => {
-                    let data = doc.data();
-                    let date = data.DateTime.toDate().toISOString().split('T')[0];
-                    if (!newEvents[date]) {
-                        newEvents[date] = [];
-                    }
-                    newEvents[date].push({ name: data.name, type: data.type, date: date });
-                    newMarkedDates[date] = { marked: true, dotColor: 'red' };
-                });
-                // Setting the marked dates and events
-                setMarkedDates(newMarkedDates);
-                setEvents(newEvents);
-            });
-            return () => unsubsribe();
+            const fetchEvents = async () => {
+                try {
+                    const userEvents = await fetchUserEvents(uid);
+                    const newMarkedDates = {};
+                    userEvents.forEach(event => {
+                        const date = event.DateTime.toDate().toISOString().split('T')[0];
+                        if (!newEvents[date]) {
+                            newEvents[date] = [];
+                        }
+                        newEvents[date].push({ name: event.name, type: event.type, date: date, userOrSquad: "user" });
+                        newMarkedDates[date] = { marked: true, dotColor: 'red' };
+                    });
+
+                    const squadEvents = await fetchSquadEvents(squadid);
+                    sqaudEvents.forEach(event => {
+                        const date = event.DateTime.toDate().toISOString().split('T')[0];
+                        if (!newEvents[date]) {
+                            newEvents[date] = [];
+                        }
+                        newEvents[date].push({ name: event.name, type: event.type, date: date, userOrSquad: "squad" });
+                        newMarkedDates[date] = { marked: true, dotColor: 'green' };
+                    });
+
+                    // Setting the marked dates and events
+                    setMarkedDates(newMarkedDates);
+                    setEvents(newEvents);
+                } catch (error) {
+                    console.error("Error fetching events: ", error);
+                }
+            };
         }
-    }, [newEventAdded]);
+        fetchEvents();
+    }, [uid]);
 
     // Rendering the CalendarScreen component
     return (
@@ -254,6 +332,11 @@ const styles = StyleSheet.create({
     },
     modalText: {
         textAlign: 'center',
+    },
+    modalHeaderText: {
+        fontWeight: 'bold',
+        fontSize: 16, 
+        color: 'blue',
     },
     addEventTitle: {
         fontWeight: 'bold',

@@ -21,9 +21,24 @@ export default function Squads() {
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState(null);
     const [items, setItems] = useState([
-        { label: 'Apple', value: 'apple' },
-        { label: 'Banana', value: 'banana' }
+        { label: 'RJW', value: 'RJW' },
+        { label: 'SouthCommon', value: 'SouthCommon' },
+        { label: 'CSC384', value: 'CSC384' },
     ]);
+
+    const handleAddNewSquad = () => {
+        // Logic for adding a new squad
+        // This is where you would add a new item to your list or perform any other necessary action
+        console.log('Adding a new squad');
+    };
+
+    const handleJoinExistingSquad = () => {
+        // Logic for joining an existing squad
+        // This is where you would implement the logic for joining an existing squad
+        
+        console.log('Joining an existing squad');
+    };
+
 
     return (
         <View style={styles.container}>
@@ -48,6 +63,7 @@ export default function Squads() {
                         fontSize: 20,
                         fontFamily: 'Helvetica Neue',
                     }}
+                    placeholder='Select a Squad'
                 />
             </View>
             <Text style={styles.title}> Weekly Activity </Text>
@@ -78,7 +94,7 @@ export default function Squads() {
             </ScrollView>
             <Text style={styles.bottom}>Group Milestones </Text>
             <View style={styles.horizontalContainer}>
-                <TouchableOpacity style={styles.button}>
+                <TouchableOpacity style={styles.circle_button}>
                     <AnimatedCircularProgress
                         size={80}
                         width={6}
@@ -87,7 +103,7 @@ export default function Squads() {
                         backgroundColor="#3d5875"
                     />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button}>
+                <TouchableOpacity style={styles.circle_button}>
                     <AnimatedCircularProgress
                         size={80}
                         width={6}
@@ -96,7 +112,7 @@ export default function Squads() {
                         backgroundColor="#3d5875"
                     />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button}>
+                <TouchableOpacity style={styles.circle_button}>
                     <AnimatedCircularProgress
                         size={80}
                         width={6}
@@ -104,6 +120,15 @@ export default function Squads() {
                         tintColor="#00B127"
                         backgroundColor="#3d5875"
                     />
+                </TouchableOpacity>
+            </View>
+            {/* Buttons */}
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.button} onPress={handleAddNewSquad}>
+                    <Text style={styles.buttonText}>Add New Squad</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={handleJoinExistingSquad}>
+                    <Text style={styles.buttonText}>Join Existing Squad</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -144,7 +169,7 @@ const styles = StyleSheet.create({
         color: 'white',
         paddingBottom: 10,
     },
-    button: {
+    circle_button: {
         backgroundColor: '#EEEEEE',
         width: 80,
         height: 80,
@@ -158,4 +183,20 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between', // You can use 'space-around', 'space-evenly', or other justifying options
         marginTop: 10,
     },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: 40,
+        marginBottom: 50,
+      },
+      button: {
+        backgroundColor: '#EEEEEE',
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+      },
+      buttonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+      },
 });

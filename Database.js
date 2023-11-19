@@ -32,12 +32,13 @@ export async function addGoal(goalname, current, target) {
 // type can only have two values: Sports or Workout
 // DateTime must be a Timestamp object
 // Example for Dec25, 2023: addEvent("Drop-in Boxing", "Sports", Timestamp.fromDate(new Date("2023-03-25")));
-export function addEvent(eventname, type, DateTime) {
-    return addDoc(collection(db, "events"), {
+export async function addEvent(eventname, type, DateTime) {
+    const docRef = await addDoc(collection(db, "events"), {
         name: eventname,
         type: type,
         DateTime: DateTime
     });
+    return docRef.id;
 }
 
 export function addFriend(userid1, userid2) {
@@ -239,8 +240,40 @@ export async function fetchSquadGoals(squadID) {
     return goalList;
 }
 
+export async function fetchSquadName(squadID) {
+    const squadNamesRef = collection(db, "squads");
+    const q = query(squadNamesRef, where(documentId(), "==", squadID));
+    const querySnapshot = await getDocs(q);
 
+    if(!querySnapshot.empty) {
+        return querySnapshot.docs[0].data().name;
+    }
+    else{
+        console.error("Squad with ID ${squadID} does not exist");
+        return null;
+    }
+}
 
+export async function fetchSquadsForUser(uid) {
+    const squadList = [];
+    const userSquadsRef = collection(db, "users_squads_join");
+    const userSquadsQuery = query(userSquadsRef, where("userID", "==", uid));
+    const querySnapshot = await getDocs(userSquadsQuery);
+    for (const doc of querySnapshot.docs) {
+        const squadID = doc.data().squadID;
+        const squadName = await fetchSquadName(squadID);
+        if (squadName !== null) {
+            const squadInfo = {
+                squadID: squadID,
+                squadName: squadName
+            };
+            squadList.push(squadInfo);
+        } else {
+            console.error("Sqaud with ID ${squadID} does not exist");
+        }
+    };
+    return squadList;
+}
 
 /*
     Test functions:

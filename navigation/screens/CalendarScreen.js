@@ -19,7 +19,6 @@ export default function CalendarScreen({ navigation }) {
     const [newEventAdded, setNewEventAdded] = React.useState(true);
     const [isLoading, setIsLoading] = React.useState(true);
     const userID = "JSVhKJSFRaeictUBPlcLJ7nczHb2";
-    const squadID = "Vxpt7XxzOkq4363HQv9r";
     const eventTypes = [
         { label: 'Sport', value: 'Sport' },
         { label: 'Workout', value: 'Workout' }
@@ -262,56 +261,6 @@ export default function CalendarScreen({ navigation }) {
         }
     };
 
-    // UseEffect hook to get events from Firestore when the component mounts
-    React.useEffect(() => {
-        if (newEventAdded){
-            setIsLoading(true);
-            const fetchEvents = async () => {
-                try {
-                    const userEvents = await fetchUserEvents(userID);
-                    const newEvents = {}
-                    const newMarkedDates = {};
-                    userEvents.forEach(event => {
-                        const date = event.DateTime.toDate().toISOString().split('T')[0];
-                        if (!newEvents[date]) {
-                            newEvents[date] = [];
-                        }
-                        newEvents[date].push({ name: event.name, type: event.type, date: date, userOrSquad: "user" });
-                        newMarkedDates[date] = { marked: true, dotColor: 'green' };
-                    });
-
-                    const squadEvents = await fetchSquadEvents(squadID);
-                    const squadName = await fetchSquadName(squadID);
-                    squadEvents.forEach(event => {
-                        const date = event.DateTime.toDate().toISOString().split('T')[0];
-                        if (!newEvents[date]) {
-                            newEvents[date] = [];
-                        }
-                        newEvents[date].push({ name: event.name, type: event.type, date: date, userOrSquad: squadName });
-                        newMarkedDates[date] = { marked: true, dotColor: 'orange' };
-                    });
-
-                    // If a date has both a user and squad event, set the dot color to orange
-                    Object.keys(newEvents).forEach(date => {
-                        const isUserEvent = newEvents[date].some(event => event.userOrSquad === "user");
-                        const isSquadEvent = newEvents[date].some(event => event.userOrSquad !== "user");
-                        if (isUserEvent && isSquadEvent){
-                            newMarkedDates[date].dotColor = "purple";
-                        }
-                    });
-
-                    // Setting the marked dates and events
-                    setMarkedDates(newMarkedDates);
-                    setEvents(newEvents);
-                    setIsLoading(false);
-                } catch (error) {
-                    console.error("Error fetching events: ", error);
-                }
-            };
-            fetchEvents();
-        }
-    }, [newEventAdded]);
-
     React.useEffect(() => {
         const fetchUserSquads = async () => {
             try {
@@ -335,6 +284,56 @@ export default function CalendarScreen({ navigation }) {
         };
         fetchUserData();
     }, [userID]);
+
+    // UseEffect hook to get events from Firestore when the component mounts
+    React.useEffect(() => {
+        if (newEventAdded){
+            setIsLoading(true);
+            const fetchEvents = async () => {
+                try {
+                    const userEvents = await fetchUserEvents(userID);
+                    const newEvents = {}
+                    const newMarkedDates = {};
+                    userEvents.forEach(event => {
+                        const date = event.DateTime.toDate().toISOString().split('T')[0];
+                        if (!newEvents[date]) {
+                            newEvents[date] = [];
+                        }
+                        newEvents[date].push({ name: event.name, type: event.type, date: date, userOrSquad: "user" });
+                        newMarkedDates[date] = { marked: true, dotColor: 'green' };
+                    });
+                    for (const squad of squadList) {
+                        const squadEvents = await fetchSquadEvents(squad.squadID);
+                        const squadName = squad.squadName;
+                        squadEvents.forEach(event => {
+                            const date = event.DateTime.toDate().toISOString().split('T')[0];
+                            if (!newEvents[date]) {
+                                newEvents[date] = [];
+                            }
+                            newEvents[date].push({ name: event.name, type: event.type, date: date, userOrSquad: squadName });
+                            newMarkedDates[date] = { marked: true, dotColor: 'orange' };
+                        });
+                    }
+                    // If a date has both a user and squad event, set the dot color to orange
+                    Object.keys(newEvents).forEach(date => {
+                        const isUserEvent = newEvents[date].some(event => event.userOrSquad === "user");
+                        const isSquadEvent = newEvents[date].some(event => event.userOrSquad !== "user");
+                        if (isUserEvent && isSquadEvent){
+                            newMarkedDates[date].dotColor = "purple";
+                        }
+                    });
+
+                    // Setting the marked dates and events
+                    setMarkedDates(newMarkedDates);
+                    setEvents(newEvents);
+                    setIsLoading(false);
+                } catch (error) {
+                    console.error("Error fetching events: ", error);
+                }
+            };
+            fetchEvents();
+        }
+    }, [newEventAdded]);
 
     if (isLoading) {
         return (

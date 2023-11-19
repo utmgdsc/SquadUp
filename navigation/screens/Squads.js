@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, Button, ScrollView, TouchableOpacity } from 're
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { Table, Row } from 'react-native-table-component';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { addEvent, fetchSquadEvents, fetchSquadName, fetchSquadsForUser, fetchUserEvents, joinSquadtoEvent, joinUsertoEvent, fetchUser } from '../../Database';
 
 const tableDataSample = {
     tableHead: ['', 'S', 'M', 'T', 'W', 'T', 'F', 'S'],
@@ -64,7 +65,10 @@ export default function Squads() {
                     value={valueSquadList}
                     setOpen={setOpen}
                     setValue={setValueSquadList}
-                    items={items}
+                    items={squadList.map(squad => ({
+                        label: squad.squadName,
+                        value: squad.squadID,
+                    }))}
                     // setItems={setItems}
                     containerStyle={{ height: 50 }}
                     style={styles.picker}
@@ -79,6 +83,9 @@ export default function Squads() {
                         fontFamily: 'Helvetica Neue',
                     }}
                     placeholder='Select a Squad'
+                    onSelectItem={(item) => {
+                        setActiveSquad(item.value);
+                    }}
                 />
             </View>
             <Text style={styles.title}> Weekly Activity </Text>
@@ -164,6 +171,7 @@ const styles = StyleSheet.create({
         padding: 5,
         borderRadius: 10, // Add rounded corners
         margin: 10, // Add margin to separate from other components
+        zIndex: 1 // This puts the drop down in front of all other components
     },
     picker: {
         backgroundColor: '#EEEEEE', // Background color for the drop-down

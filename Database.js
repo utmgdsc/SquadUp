@@ -240,8 +240,40 @@ export async function fetchSquadGoals(squadID) {
     return goalList;
 }
 
+export async function fetchSquadName(squadID) {
+    const squadNamesRef = collection(db, "squads");
+    const q = query(squadNamesRef, where(documentId(), "==", squadID));
+    const querySnapshot = await getDocs(q);
 
+    if(!querySnapshot.empty) {
+        return querySnapshot.docs[0].data().name;
+    }
+    else{
+        console.error("Squad with ID ${squadID} does not exist");
+        return null;
+    }
+}
 
+export async function fetchSquadsForUser(uid) {
+    const squadList = [];
+    const userSquadsRef = collection(db, "users_squads_join");
+    const userSquadsQuery = query(userSquadsRef, where("userID", "==", uid));
+    const querySnapshot = await getDocs(userSquadsQuery);
+    for (const doc of querySnapshot.docs) {
+        const squadID = doc.data().squadID;
+        const squadName = await fetchSquadName(squadID);
+        if (squadName !== null) {
+            const squadInfo = {
+                squadID: squadID,
+                squadName: squadName
+            };
+            squadList.push(squadInfo);
+        } else {
+            console.error("Sqaud with ID ${squadID} does not exist");
+        }
+    };
+    return squadList;
+}
 
 /*
     Test functions:

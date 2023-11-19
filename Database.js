@@ -53,7 +53,7 @@ Join Functions - To create new join documents inside the database,
 these are used to create relationships between collections    
 */
 
-export function joinUsertoSquad(uid, squadID){
+export function joinUsertoSquad(uid, squadID) {
     let doc_name = uid + "_" + squadID;
     setDoc(doc(db, "users_squads_join", doc_name), {
         userID: uid,
@@ -66,7 +66,7 @@ DateTime must be a Timestamp object
 Example for Dec25 to Dec29, 2023: 
 joinUsertoGoal([some uid], [some goalID], Timestamp.fromDate(new Date("2023-03-25")), Timestamp.fromDate(new Date("2023-03-29")));
 */
-export function joinUsertoGoal(uid, goalID, startDate, endDate){
+export function joinUsertoGoal(uid, goalID, startDate, endDate) {
     let doc_name = uid + "_" + goalID;
     setDoc(doc(db, "users_goals_join", doc_name), {
         userID: uid,
@@ -76,7 +76,7 @@ export function joinUsertoGoal(uid, goalID, startDate, endDate){
     });
 }
 
-export function joinUsertoEvent(uid, eventID){
+export function joinUsertoEvent(uid, eventID) {
     let doc_name = uid + "_" + eventID;
     setDoc(doc(db, "users_events_join", doc_name), {
         userID: uid,
@@ -84,7 +84,7 @@ export function joinUsertoEvent(uid, eventID){
     });
 }
 
-export function joinSquadtoGoal(squadID, goalID, startDate, endDate){
+export function joinSquadtoGoal(squadID, goalID, startDate, endDate) {
     let doc_name = squadID + "_" + goalID;
     setDoc(doc(db, "squad_goals_join", doc_name), {
         squadID: squadID,
@@ -94,7 +94,7 @@ export function joinSquadtoGoal(squadID, goalID, startDate, endDate){
     });
 }
 
-export function joinSquadtoEvent(squadID, eventID){
+export function joinSquadtoEvent(squadID, eventID) {
     let doc_name = squadID + "_" + eventID;
     setDoc(doc(db, "squad_events_join", doc_name), {
         squadID: squadID,
@@ -114,6 +114,18 @@ these are used to retrieve data about specific users, squads, etc.
         ... ,
     ]
 */
+
+export async function fetchUser(uid) {
+    const name = [];
+    const userRef = collection(db, "users");
+    const q = query(userRef, where(documentId(), "==", uid));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        name.push(doc.data().name);
+    })
+    return name[0];
+}
+
 export async function fetchUserEvents(uid) {
     const eventID_list = []
     const eventList = []
@@ -128,7 +140,7 @@ export async function fetchUserEvents(uid) {
     })
 
     const EventsRef = collection(db, "events");
-    for(i = 0; i < eventID_list.length; i++){
+    for (i = 0; i < eventID_list.length; i++) {
         const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
@@ -136,7 +148,7 @@ export async function fetchUserEvents(uid) {
             eventList.push(doc.data());
         })
     }
-    
+
     return eventList;
 }
 
@@ -161,7 +173,7 @@ export async function fetchUserGoals(uid) {
     })
 
     const GoalsRef = collection(db, "goals");
-    for(i = 0; i < goalID_list.length; i++){
+    for (i = 0; i < goalID_list.length; i++) {
         const q2 = query(GoalsRef, where(documentId(), "==", goalID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
@@ -169,7 +181,7 @@ export async function fetchUserGoals(uid) {
             goalList.push(doc.data());
         })
     }
-    
+
     return goalList;
 }
 
@@ -194,7 +206,7 @@ export async function fetchSquadEvents(squadID) {
     })
 
     const EventsRef = collection(db, "events");
-    for(i = 0; i < eventID_list.length; i++){
+    for (i = 0; i < eventID_list.length; i++) {
         const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
@@ -202,7 +214,7 @@ export async function fetchSquadEvents(squadID) {
             eventList.push(doc.data());
         })
     }
-    
+
     return eventList;
 }
 
@@ -227,7 +239,7 @@ export async function fetchSquadGoals(squadID) {
     })
 
     const GoalsRef = collection(db, "goals");
-    for(i = 0; i < goalID_list.length; i++){
+    for (i = 0; i < goalID_list.length; i++) {
         const q2 = query(GoalsRef, where(documentId(), "==", goalID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
@@ -235,7 +247,7 @@ export async function fetchSquadGoals(squadID) {
             goalList.push(doc.data());
         })
     }
-    
+
     return goalList;
 }
 

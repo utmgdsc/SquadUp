@@ -20,11 +20,15 @@ export default function Squads() {
     const [data, setData] = React.useState(tableDataSample);
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState(null);
-    const [items, setItems] = useState([
-        { label: 'RJW', value: 'RJW' },
-        { label: 'SouthCommon', value: 'SouthCommon' },
-        { label: 'CSC384', value: 'CSC384' },
-    ]);
+    // const [items, setItems] = useState([
+    //     { label: 'RJW', value: 'RJW' },
+    //     { label: 'SouthCommon', value: 'SouthCommon' },
+    //     { label: 'CSC384', value: 'CSC384' },
+    // ]);
+    const [squadList, setSquadList] = React.useState([]);
+    const [openSquadList, setOpenSquadList] = React.useState(false);
+    const [valueSquadList, setValueSquadList] = React.useState(null);
+    const [activeSquad, setActiveSquad] = React.useState(''); // This is the squad for which all info will be rendered 
 
     const handleAddNewSquad = () => {
         // Logic for adding a new squad
@@ -39,18 +43,29 @@ export default function Squads() {
         console.log('Joining an existing squad');
     };
 
+    React.useEffect(() => {
+        const fetchUserSquads = async () => {
+            try {
+                const userSquads = await fetchSquadsForUser(userID);
+                setSquadList([{ squadID: "", squadName: 'Personal'}, ...userSquads]);
+            } catch (error) {
+                console.error("Error fetching user's squads: ", error);
+            }
+        }
+        fetchUserSquads();
+    }, []);
 
     return (
         <View style={styles.container}>
             {/* Drop-down section */}
             <View style={styles.dropdownContainer}>
                 <DropDownPicker
-                    open={open}
-                    value={value}
-                    items={items}
+                    open={openSquadList}
+                    value={valueSquadList}
                     setOpen={setOpen}
-                    setValue={setValue}
-                    setItems={setItems}
+                    setValue={setValueSquadList}
+                    items={items}
+                    // setItems={setItems}
                     containerStyle={{ height: 50 }}
                     style={styles.picker}
                     dropDownStyle={{ backgroundColor: '#EEEEEE' }}

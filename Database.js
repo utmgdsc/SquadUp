@@ -12,10 +12,12 @@ export function addUser(uid, username) {
     });
 }
 
-export function addSquad(squadname) {
-    addDoc(collection(db, "squads"), {
+export async function addSquad(squadname) {
+    const docRef = await addDoc(collection(db, "squads"), {
         name: squadname
     });
+    // console.log("In docref, this is the id: ", docRef.id);
+    return docRef.id;
 }
 
 // returns newly-created goal's id
@@ -261,7 +263,7 @@ export async function fetchSquadName(squadID) {
         return querySnapshot.docs[0].data().name;
     }
     else{
-        console.error("Squad with ID ${squadID} does not exist");
+        // console.error("Squad with ID ${squadID} does not exist");
         return null;
     }
 }
@@ -281,7 +283,7 @@ export async function fetchSquadsForUser(uid) {
             };
             squadList.push(squadInfo);
         } else {
-            console.error("Sqaud with ID ${squadID} does not exist");
+            // console.error("Squad with ID ${squadID} does not exist");
         }
     };
     return squadList;

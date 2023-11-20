@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, Button, TextInput, Alert, Modal, TouchableOpacity, KeyboardAvoidingView, ActivityIndicator } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
-import { addEvent, fetchSquadEvents, fetchSquadName, fetchSquadsForUser, fetchUserEvents, joinSquadtoEvent, joinUsertoEvent } from '../../Database';
+import { addEvent, fetchSquadEvents, fetchSquadName, fetchSquadsForUser, fetchUserEvents, joinSquadtoEvent, joinUsertoEvent, fetchUser } from '../../Database';
 import { Timestamp } from 'firebase/firestore';
 import DropDownPicker from 'react-native-dropdown-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -19,7 +19,6 @@ export default function CalendarScreen({ navigation }) {
     const [newEventAdded, setNewEventAdded] = React.useState(true);
     const [isLoading, setIsLoading] = React.useState(true);
     const userID = "JSVhKJSFRaeictUBPlcLJ7nczHb2";
-    const squadID = "Vxpt7XxzOkq4363HQv9r";
     const eventTypes = [
         { label: 'Sport', value: 'Sport' },
         { label: 'Workout', value: 'Workout' }
@@ -32,6 +31,8 @@ export default function CalendarScreen({ navigation }) {
     const [chosenDate, setChosenDate] = React.useState(new Date());
     const [squadOrUserEvent, setSquadOrUserEvent] = React.useState('user')
     const [squadList, setSquadList] = React.useState([]);
+    const [userName, setUserName] = React.useState('');
+    const [squadID, setSquadID] = React.useState('');
 
     // Modal used to display events of a particular day 
     const EventModal = ({ visible, onClose, events }) => {
@@ -94,6 +95,7 @@ export default function CalendarScreen({ navigation }) {
                             onChangeText={setEventName}
                             value={eventName}
                             placeholder='Enter event name'
+                            placeholderTextColor='rgba(0, 0, 0, 0.3)'
                         />
                         <View style={{ marginTop: 10, marginBottom: 10, zIndex: 2 }}>
                             <DropDownPicker
@@ -114,6 +116,7 @@ export default function CalendarScreen({ navigation }) {
                                     fontFamily: 'Helvetica Neue',
                                 }}
                                 placeholder='Select an event type'
+                                placeholderTextColor='rgba(0, 0, 0, 0.3)'
                                 onSelectItem={(item) => setEventType(item.value)}
                             />
                         </View>
@@ -139,9 +142,10 @@ export default function CalendarScreen({ navigation }) {
                                     fontFamily: 'Helvetica Neue',
                                 }}
                                 placeholder='Select who the event is for'
+                                placeholderTextColor='rgba(0, 0, 0, 0.3)'
                                 onSelectItem={(item) => {
                                     setSquadOrUserEvent(item.label.toLowerCase() === 'personal' ? 'user' : item.label);
-                                    // console.log("Is it personal? ", squadOrUserEvent);
+                                    setSquadID(item.value);
                                 }}
                             />
                         </View>
@@ -199,10 +203,9 @@ export default function CalendarScreen({ navigation }) {
             } else {
                 joinSquadtoEvent(squadID, eventID);
             }
-            // console.log("Before pushing, userOrSquad: ", squadOrUserEvent);
+
             // Pushing the new event locally 
             const newEvent = {name: eventName, type:eventType, date: selectedDate, userOrSquad: squadOrUserEvent };
-            // console.log("New Event's squadOrUserEvent: ", newEvent.userOrSquad);
 
             const newEvents = {...events};
             if(!newEvents[selectedDate]) {
@@ -262,6 +265,30 @@ export default function CalendarScreen({ navigation }) {
         }
     };
 
+    React.useEffect(() => {
+        const fetchUserSquads = async () => {
+            try {
+                const userSquads = await fetchSquadsForUser(userID);
+                setSquadList([{ squadID: "", squadName: 'Personal'}, ...userSquads]);
+            } catch (error) {
+                console.error("Error fetching user's squads: ", error);
+            }
+        }
+        fetchUserSquads();
+    }, []);
+
+    React.useEffect(() => {
+        const fetchUserData = async () => {
+            try { 
+                const userData = await fetchUser(userID);
+                setUserName(userData)
+            } catch (error) {
+                console.error("Error fetching user name: ", error);
+            }
+        };
+        fetchUserData();
+    }, [userID]);
+
     // UseEffect hook to get events from Firestore when the component mounts
     React.useEffect(() => {
         if (newEventAdded){
@@ -279,18 +306,18 @@ export default function CalendarScreen({ navigation }) {
                         newEvents[date].push({ name: event.name, type: event.type, date: date, userOrSquad: "user" });
                         newMarkedDates[date] = { marked: true, dotColor: 'green' };
                     });
-
-                    const squadEvents = await fetchSquadEvents(squadID);
-                    const squadName = await fetchSquadName(squadID);
-                    squadEvents.forEach(event => {
-                        const date = event.DateTime.toDate().toISOString().split('T')[0];
-                        if (!newEvents[date]) {
-                            newEvents[date] = [];
-                        }
-                        newEvents[date].push({ name: event.name, type: event.type, date: date, userOrSquad: squadName });
-                        newMarkedDates[date] = { marked: true, dotColor: 'orange' };
-                    });
-
+                    for (const squad of squadList) {
+                        const squadEvents = await fetchSquadEvents(squad.squadID);
+                        const squadName = squad.squadName;
+                        squadEvents.forEach(event => {
+                            const date = event.DateTime.toDate().toISOString().split('T')[0];
+                            if (!newEvents[date]) {
+                                newEvents[date] = [];
+                            }
+                            newEvents[date].push({ name: event.name, type: event.type, date: date, userOrSquad: squadName });
+                            newMarkedDates[date] = { marked: true, dotColor: 'orange' };
+                        });
+                    }
                     // If a date has both a user and squad event, set the dot color to orange
                     Object.keys(newEvents).forEach(date => {
                         const isUserEvent = newEvents[date].some(event => event.userOrSquad === "user");
@@ -312,18 +339,6 @@ export default function CalendarScreen({ navigation }) {
         }
     }, [newEventAdded]);
 
-    React.useEffect(() => {
-        const fetchUserSquads = async () => {
-            try {
-                const userSquads = await fetchSquadsForUser(userID);
-                setSquadList([{ squadID: "", squadName: 'Personal'}, ...userSquads]);
-            } catch (error) {
-                console.error("Error fetching user's squads: ", error);
-            }
-        }
-        fetchUserSquads();
-    }, []);
-
     if (isLoading) {
         return (
             <View style={styles.loadingContainer}>
@@ -337,7 +352,7 @@ export default function CalendarScreen({ navigation }) {
     return (
         <KeyboardAvoidingView behavior='height' style={styles.keyboardStyle} keyboardVerticalOffset={30}>
             <View style={styles.titleContainer}>
-                <Text style={styles.title}> Calendar </Text>
+                <Text style={styles.title}> {userName}'s Calendar </Text>
 
                 <Calendar
                     style={styles.calendar}
@@ -350,12 +365,12 @@ export default function CalendarScreen({ navigation }) {
                     onClose={() => setModalVisible(false)}
                     events={events}
                 />
-                <TouchableOpacity onPress = {() => setAddEventModalVisible(true)}>
-                    <View style={styles.modalButton}>
-                        <Text style={styles.addEventTitle}>Add an event</Text>
-                    </View>
-                </TouchableOpacity>
-                {addEventModal()}
+                <View style = {styles.pageButtonContainer}>
+                    <TouchableOpacity style = {styles.pageButton} onPress = {() => setAddEventModalVisible(true)}>
+                        <Text style={styles.addEventTitle}>Add an Event</Text>
+                    </TouchableOpacity>
+                    {addEventModal()}
+                </View>
             </View>
         </KeyboardAvoidingView>
     );
@@ -372,15 +387,16 @@ const calendarTheme = {
 // Defining the styles for the CalendarScreen component
 const styles = StyleSheet.create({
     titleContainer: {
-        // display: 'flex', 
-        //alignItems: 'center', 
         justifyContent: 'center',
         flex: 1,
+        paddingTop: 80, 
+        backgroundColor: '#303841'
     },
     title: {
         fontSize: 30,
         alignSelf: 'center',
         fontWeight: 'bold',
+        color: 'white',
     },
     calendar: {
         borderRadius: 5,
@@ -455,6 +471,19 @@ const styles = StyleSheet.create({
     modalButtonClose: {
         backgroundColor: '#2196F3',
     },
+    pageButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginTop: 40,
+        marginBottom: 50,
+    },
+    pageButton: {
+        backgroundColor: '#EEEEEE',
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        width: "50%"
+    },
     textStyle: {
         color: 'white',
         fontWeight: 'bold',
@@ -471,14 +500,13 @@ const styles = StyleSheet.create({
     modalHeaderText: {
         fontWeight: 'bold',
         fontSize: 20, 
-        color: 'blue',
+        color: '#2196F3',
     },
     addEventTitle: {
         fontWeight: 'bold',
-        fontSize: 20,
+        fontSize: 22,
         paddingBottom: 10,
         textAlign: 'center',
-        color: "white",
     },
     loadingContainer: {
         flex: 1,

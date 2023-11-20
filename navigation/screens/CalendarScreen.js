@@ -32,6 +32,7 @@ export default function CalendarScreen({ navigation }) {
     const [squadOrUserEvent, setSquadOrUserEvent] = React.useState('user')
     const [squadList, setSquadList] = React.useState([]);
     const [userName, setUserName] = React.useState('');
+    const [squadID, setSquadID] = React.useState('');
 
     // Modal used to display events of a particular day 
     const EventModal = ({ visible, onClose, events }) => {
@@ -94,6 +95,7 @@ export default function CalendarScreen({ navigation }) {
                             onChangeText={setEventName}
                             value={eventName}
                             placeholder='Enter event name'
+                            placeholderTextColor='rgba(0, 0, 0, 0.3)'
                         />
                         <View style={{ marginTop: 10, marginBottom: 10, zIndex: 2 }}>
                             <DropDownPicker
@@ -114,6 +116,7 @@ export default function CalendarScreen({ navigation }) {
                                     fontFamily: 'Helvetica Neue',
                                 }}
                                 placeholder='Select an event type'
+                                placeholderTextColor='rgba(0, 0, 0, 0.3)'
                                 onSelectItem={(item) => setEventType(item.value)}
                             />
                         </View>
@@ -139,9 +142,10 @@ export default function CalendarScreen({ navigation }) {
                                     fontFamily: 'Helvetica Neue',
                                 }}
                                 placeholder='Select who the event is for'
+                                placeholderTextColor='rgba(0, 0, 0, 0.3)'
                                 onSelectItem={(item) => {
                                     setSquadOrUserEvent(item.label.toLowerCase() === 'personal' ? 'user' : item.label);
-                                    // console.log("Is it personal? ", squadOrUserEvent);
+                                    setSquadID(item.value);
                                 }}
                             />
                         </View>
@@ -496,7 +500,7 @@ const styles = StyleSheet.create({
     modalHeaderText: {
         fontWeight: 'bold',
         fontSize: 20, 
-        color: 'blue',
+        color: '#2196F3',
     },
     addEventTitle: {
         fontWeight: 'bold',

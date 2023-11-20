@@ -7,11 +7,14 @@ import { User, onAuthStateChanged } from 'firebase/auth';
 import { FIREBASE_AUTH } from './firebaseConfig';
 import { useState, useEffect } from 'react';
 import Register from './navigation/Register';
+import { LogBox } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 export default function App(){
   
   const [ user, setUser ] = useState(User | null);
+
+  LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
 
   useEffect(() => {
     onAuthStateChanged(FIREBASE_AUTH, (user) => {

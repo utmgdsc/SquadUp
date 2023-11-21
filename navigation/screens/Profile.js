@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, But
 import * as ImagePicker from 'expo-image-picker';
 import { fetchUser, fetchUserGoals } from '../../Database';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
-
+import CustomIconPickerModal from '../components/CustomIconPickerModal';
 import { Ionicons } from '@expo/vector-icons';
 
 
@@ -11,6 +11,8 @@ export default Profile = ({ userId }) => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [userName, setUserName] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
+    const [modalVisible2, setmodalVisible2] = useState(false);
+    const [selectedIcon, setSelectedIcon] = useState('add-circle'); // Set a default icon
 
     const toggleModal = () => {
         setModalVisible(!modalVisible);
@@ -18,6 +20,19 @@ export default Profile = ({ userId }) => {
 
     const closeModal = () => {
         toggleModal();
+    };
+
+    const toggleModal2 = () => {
+        setmodalVisible2(!modalVisible);
+    };
+
+    const closeModal2 = () => {
+        toggleModal2();
+    };
+
+    const handleIconSelect = (iconName) => {
+        setSelectedIcon(iconName);
+        closeModal2();
     };
 
     const getName = async () => {
@@ -82,19 +97,19 @@ export default Profile = ({ userId }) => {
 
             {/* Progress bar */}
             <View style={styles.horizontalContainer}>
-                <TouchableOpacity style={styles.button} onPress={toggleModal}>
-                <Ionicons name="add-circle" style={styles.icon} size={109} />
+                <TouchableOpacity style={styles.button} onPress={toggleModal2}>
+                    <Ionicons name={selectedIcon} style={styles.icon} size={109} />
                     <AnimatedCircularProgress
                         size={100}
                         width={6}
                         fill={20}
                         tintColor="#00B127"
                         backgroundColor="#3d5875"
-                        
+
                     />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={toggleModal}>
-                <Ionicons name="add-circle" style={styles.icon} size={109} />
+                <TouchableOpacity style={styles.button} onPress={toggleModal2}>
+                    <Ionicons name="add-circle" style={styles.icon} size={109} />
                     <AnimatedCircularProgress
                         size={100}
                         width={6}
@@ -103,8 +118,8 @@ export default Profile = ({ userId }) => {
                         backgroundColor="#3d5875"
                     />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={toggleModal}>
-                <Ionicons name="add-circle" style={styles.icon} size={109} />
+                <TouchableOpacity style={styles.button} onPress={toggleModal2}>
+                    <Ionicons name="add-circle" style={styles.icon} size={109} />
                     <AnimatedCircularProgress
                         size={100}
                         width={6}
@@ -137,29 +152,13 @@ export default Profile = ({ userId }) => {
                 </View>
 
                 {/* Add button */}
-                <View>
-                    <TouchableOpacity onPress={toggleModal}>
-                        <Ionicons name="add-circle" size={50} color="#EEEEEE" />
-                    </TouchableOpacity>
-                    <Modal
-                        animationType="slide"
-                        transparent={false}
-                        visible={modalVisible}
-                        onRequestClose={closeModal}
-                    >
-                        <View style={{ marginTop: 22 }}>
-                            <View>
-                                <Text>Hello World!</Text>
+                <CustomIconPickerModal
+                    isVisible={modalVisible2}
+                    onSelect={handleIconSelect}
+                    onClose={closeModal2}
+                />
 
-                                <Button
-                                    onPress={closeModal}
-                                    title="Hide Modal"
-                                    color="#841584"
-                                />
-                            </View>
-                        </View>
-                    </Modal>
-                </View>
+
             </View>
         </View>
     );
@@ -190,7 +189,7 @@ const styles = StyleSheet.create({
     background: {
         flex: 1,
         backgroundColor: "#303841",
-        
+
     },
     userName: {
         paddingTop: "3%",

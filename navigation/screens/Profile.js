@@ -12,7 +12,10 @@ export default Profile = ({ userId }) => {
     const [userName, setUserName] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalVisible2, setmodalVisible2] = useState(false);
-    const [selectedIcon, setSelectedIcon] = useState('add-circle'); // Set a default icon
+    const [modalVisible3, setmodalVisible3] = useState(false);
+    const [selectedIcon1, setSelectedIcon1] = useState('add'); // Set a default icon
+    const [selectedIcon2, setSelectedIcon2] = useState('add'); // Set a default icon
+    const [selectedIcon3, setSelectedIcon3] = useState('add'); // Set a default icon
 
     const toggleModal = () => {
         setModalVisible(!modalVisible);
@@ -23,16 +26,34 @@ export default Profile = ({ userId }) => {
     };
 
     const toggleModal2 = () => {
-        setmodalVisible2(!modalVisible);
+        setmodalVisible2(!modalVisible2);
     };
 
     const closeModal2 = () => {
         toggleModal2();
     };
 
-    const handleIconSelect = (iconName) => {
-        setSelectedIcon(iconName);
-        closeModal2();
+    const toggleModal3 = () => {
+        setmodalVisible3(!modalVisible3);
+    };
+
+    const closeModal3 = () => {
+        toggleModal3();
+    };
+
+    const handleIconSelect = (iconName, num) => {
+        if (num == 1) {
+            setSelectedIcon1(iconName);
+            closeModal();
+        }
+        if (num == 2) {
+            setSelectedIcon2(iconName);
+            closeModal2();
+        }
+        if (num == 3) {
+            setSelectedIcon3(iconName);
+            closeModal3();
+        }
     };
 
     const getName = async () => {
@@ -97,8 +118,8 @@ export default Profile = ({ userId }) => {
 
             {/* Progress bar */}
             <View style={styles.horizontalContainer}>
-                <TouchableOpacity style={styles.button} onPress={toggleModal2}>
-                    <Ionicons name={selectedIcon} style={styles.icon} size={109} />
+                <TouchableOpacity style={styles.button} onPress={toggleModal}>
+                    <Ionicons name={selectedIcon1} style={styles.icon} size={70} />
                     <AnimatedCircularProgress
                         size={100}
                         width={6}
@@ -109,7 +130,7 @@ export default Profile = ({ userId }) => {
                     />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.button} onPress={toggleModal2}>
-                    <Ionicons name="add-circle" style={styles.icon} size={109} />
+                    <Ionicons name={selectedIcon2} style={styles.icon} size={70} />
                     <AnimatedCircularProgress
                         size={100}
                         width={6}
@@ -118,8 +139,8 @@ export default Profile = ({ userId }) => {
                         backgroundColor="#3d5875"
                     />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={toggleModal2}>
-                    <Ionicons name="add-circle" style={styles.icon} size={109} />
+                <TouchableOpacity style={styles.button} onPress={toggleModal3}>
+                    <Ionicons name={selectedIcon3} style={styles.icon} size={70} />
                     <AnimatedCircularProgress
                         size={100}
                         width={6}
@@ -151,14 +172,24 @@ export default Profile = ({ userId }) => {
                     </ScrollView>
                 </View>
 
-                {/* Add button */}
+                {/* Add button 1 */}
+                <CustomIconPickerModal
+                    isVisible={modalVisible}
+                    onSelect={(iconName) => handleIconSelect(iconName, 1)}
+                    onClose={closeModal}
+                />
+                {/* Add button 2 */}
                 <CustomIconPickerModal
                     isVisible={modalVisible2}
-                    onSelect={handleIconSelect}
+                    onSelect={(iconName) => handleIconSelect(iconName, 2)}
                     onClose={closeModal2}
                 />
-
-
+                {/* Add button 3 */}
+                <CustomIconPickerModal
+                    isVisible={modalVisible3}
+                    onSelect={(iconName) => handleIconSelect(iconName, 3)}
+                    onClose={closeModal3}
+                />
             </View>
         </View>
     );
@@ -219,14 +250,13 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     button: {
-        backgroundColor: '#00ADB5',
+        backgroundColor: '#EEEEEE',
         width: 100,
         height: 100,
         borderRadius: 50,
         marginTop: "5%",
         marginLeft: "5%",
         marginRight: "5%",
-        justifyContent: 'center',
     },
     container: {
         flex: 1,
@@ -257,7 +287,10 @@ const styles = StyleSheet.create({
     },
     icon: {
         position: 'absolute',
-        color: "#EEEEEE",
+        paddingTop: 12,
+        alignSelf: 'center',
+        paddingLeft: 5,
+        color: "#000000",
         zIndex: 1,
     },
 });

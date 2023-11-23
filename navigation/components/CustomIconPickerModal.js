@@ -1,6 +1,6 @@
 // CustomIconPickerModal.js
 import React, { useState, useEffect } from 'react';
-import { Modal, View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { Modal, View, TouchableOpacity, StyleSheet, Text, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const customIcons = [
@@ -13,10 +13,13 @@ const customIcons = [
   'walk',
   'restaurant',
   'speedometer',
+  'pulse',
 ];
 
 const CustomIconPickerModal = ({ isVisible, onSelect, onClose }) => {
-  //const [modalVisible2, setmodalVisible2] = React.useState(true);
+  const [goalName, setGoalName] = useState('');
+  const [currentNumber, setCurrentNumber] = useState('');
+  const [targetNumber, setTargetNumber] = useState('');
 
   return (
     <Modal
@@ -25,29 +28,89 @@ const CustomIconPickerModal = ({ isVisible, onSelect, onClose }) => {
       animationType="slide"
     >
       <View style={styles.modalContainer}>
-        {customIcons.map((iconName) => (
-          <TouchableOpacity
-            key={iconName}
-            onPress={() => [onSelect(iconName)]}
-            style={styles.iconContainer}
-          >
-            <Ionicons name={iconName} size={30} color="#303841" />
-          </TouchableOpacity>
-        ))}
+        {/* Title */}
+        <Text style={styles.modalTitle}>Add New Goal</Text>
+        {/* Goal name text input */}
+        <TextInput
+          style={styles.input}
+          placeholder="Enter goal name"
+          placeholderTextColor="#000000"
+          onChangeText={(text) => setGoalName(text)}
+        />
+        {/* Title */}
+        <Text style={styles.modalSubtitle}>Select Goal Icon</Text>
+        {/* Icon rows */}
+        <View style={styles.iconRows}>
+          <View style={styles.iconRow}>
+            <ScrollView horizontal>
+              {customIcons.slice(0, 5).map((iconName) => (
+                <TouchableOpacity
+                  key={iconName}
+                  onPress={() => onSelect(iconName)}
+                  style={styles.iconContainer}
+                >
+                  <Ionicons name={iconName} size={30} color="#303841" />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+          <View style={styles.iconRow}>
+            <ScrollView horizontal>
+              {customIcons.slice(5).map((iconName) => (
+                <TouchableOpacity
+                  key={iconName}
+                  onPress={() => onSelect(iconName)}
+                  style={styles.iconContainer}
+                >
+                  <Ionicons name={iconName} size={30} color="#303841" />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+        {/* Current and target numbers section */}
+        <View style={styles.numbersContainer}>
+          <TextInput
+            style={styles.numinput}
+            placeholder="Enter current number"
+            placeholderTextColor="#000000"
+            keyboardType="numeric"
+            onChangeText={(text) => setCurrentNumber(text)}
+          />
+          <TextInput
+            style={styles.numinput}
+            placeholder="Enter target number"
+            placeholderTextColor="#000000"
+            keyboardType="numeric"
+            onChangeText={(text) => setTargetNumber(text)}
+          />
+        </View>
         <TouchableOpacity style={styles.modalButton}
           onPress={onClose}>
           <Text style={styles.textStyle}>Close</Text>
         </TouchableOpacity>
       </View>
-    </Modal>
+    </Modal >
   );
 };
 
 const styles = StyleSheet.create({
+  modalTitle: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#303841',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  modalSubtitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#303841',
+    marginTop: 10,
+  },
   modalContainer: {
-    flex: 1,
-    //padding: 10,
-    marginHorizontal: 100,
+    //flex: 1,
+    marginHorizontal: 20,
     marginVertical: 150,
     backgroundColor: '#EEEEEE',
     borderRadius: 20,
@@ -62,14 +125,46 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  input: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 10,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    width: '80%',
+    color: '#000000',
+  },
+  numinput: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 10,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+    width: 250,
+    color: '#000000',
+  },
+  iconRows: {
+    flexDirection: 'column', // Change to 'column' to stack rows vertically
+    marginTop: 10,
+  },
+  iconRow: {
+    flexDirection: 'row',
+  },
   iconContainer: {
-    margin: 10,
+    margin: 15,
+    paddingBottom: 10,
+  },
+  numbersContainer: {
+    //width: '80%',
+    marginBottom: 10,
   },
   textStyle: {
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
-    fontSize: 20
+    fontSize: 20,
   },
   modalButton: {
     borderRadius: 20,
@@ -79,7 +174,7 @@ const styles = StyleSheet.create({
     width: '50%',
     alignSelf: 'center',
     marginBottom: 5,
-    marginTop: 25
+    marginTop: 25,
   },
 });
 

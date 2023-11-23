@@ -44,15 +44,15 @@ export default Profile = ({ userId }) => {
     const handleIconSelect = (iconName, num) => {
         if (num == 1) {
             setSelectedIcon1(iconName);
-            closeModal();
+            //closeModal();
         }
         if (num == 2) {
             setSelectedIcon2(iconName);
-            closeModal2();
+           // closeModal2();
         }
         if (num == 3) {
             setSelectedIcon3(iconName);
-            closeModal3();
+           // closeModal3();
         }
     };
 

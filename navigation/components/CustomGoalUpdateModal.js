@@ -1,26 +1,17 @@
-// CustomIconPickerModal.js
+// CustomGoalUpdateModal.js
 import React, { useState, useEffect } from 'react';
 import { Modal, View, TouchableOpacity, StyleSheet, Text, TextInput, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const customIcons = [
-  'barbell',
-  'american-football',
-  'basketball',
-  'football',
-  'tennisball',
-  'bicycle',
-  'walk',
-  'restaurant',
-  'speedometer',
-  'pulse',
-];
-
-const CustomIconPickerModal = ({ isVisible, onSelect, onClose }) => {
-  const [iconName, setIconName] = useState('add');
-  const [goalName, setGoalName] = useState('');
-  const [currentNumber, setCurrentNumber] = useState('');
-  const [targetNumber, setTargetNumber] = useState('');
+const CustomGoalUpdateModal = ({ isVisible, onClose, goalInfo }) => {
+  const [goalName, setGoalName] = useState(goalInfo[0]);
+  const [currentNumber, setCurrentNumber] = useState(goalInfo[1]);
+  const [targetNumber, setTargetNumber] = useState(goalInfo[2]);
+  useEffect(() => {
+    setGoalName(goalInfo[0]);
+    setCurrentNumber(goalInfo[1]);
+    setTargetNumber(goalInfo[2]);
+  }, [isVisible, goalInfo]);
 
   return (
     <Modal
@@ -31,45 +22,11 @@ const CustomIconPickerModal = ({ isVisible, onSelect, onClose }) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalContainer}>
           {/* Title */}
-          <Text style={styles.modalTitle}>Add New Goal</Text>
-          {/* Goal name text input */}
-          <TextInput
-            style={styles.input}
-            placeholder="Enter goal name"
-            placeholderTextColor="#000000"
-            onChangeText={(text) => setGoalName(text)}
-          />
+          <Text style={styles.modalTitle}>Update Goal</Text>
+
           {/* Title */}
-          <Text style={styles.modalSubtitle}>Select Goal Icon</Text>
-          {/* Icon rows */}
-          <View style={styles.iconRows}>
-            <View style={styles.iconRow}>
-              <ScrollView horizontal>
-                {customIcons.slice(0, 5).map((iconName) => (
-                  <TouchableOpacity
-                    key={iconName}
-                    onPress={() => setIconName(iconName)}
-                    style={styles.iconContainer}
-                  >
-                    <Ionicons name={iconName} size={30} color="#303841" />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-            <View style={styles.iconRow}>
-              <ScrollView horizontal>
-                {customIcons.slice(5).map((iconName) => (
-                  <TouchableOpacity
-                    key={iconName}
-                    onPress={() => setIconName(iconName)}
-                    style={styles.iconContainer}
-                  >
-                    <Ionicons name={iconName} size={30} color="#303841" />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
+          <Text style={styles.modalSubtitle}>Current Value: {currentNumber}</Text>
+
           {/* Current and target numbers section */}
           <View style={styles.numbersContainer}>
             <TextInput
@@ -88,10 +45,6 @@ const CustomIconPickerModal = ({ isVisible, onSelect, onClose }) => {
             />
           </View>
           <View style={styles.iconRow}>
-            <TouchableOpacity style={styles.addButton}
-              onPress={() => onSelect(iconName, goalName, currentNumber, targetNumber)}>
-              <Text style={styles.textStyle}>Add Goal</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.closeButton}
               onPress={onClose}>
               <Text style={styles.textStyle}>Close</Text>
@@ -198,4 +151,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomIconPickerModal;
+export default CustomGoalUpdateModal;

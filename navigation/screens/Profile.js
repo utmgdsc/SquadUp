@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { fetchUser, fetchUserGoals } from '../../Database';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import CustomIconPickerModal from '../components/CustomIconPickerModal';
+import CustomGoalUpdateModal from '../components/CustomGoalUpdateModal';
 import { Ionicons } from '@expo/vector-icons';
 
 
@@ -11,48 +12,88 @@ export default Profile = ({ userId }) => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [userName, setUserName] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
-    const [modalVisible2, setmodalVisible2] = useState(false);
-    const [modalVisible3, setmodalVisible3] = useState(false);
+    const [modalVisible2, setModalVisible2] = useState(false);
+    const [modalVisible3, setModalVisible3] = useState(false);
+    const [goalVisible, setgoalVisible] = useState(false);
+    const [goalVisible2, setgoalVisible2] = useState(false);
+    const [goalVisible3, setgoalVisible3] = useState(false);
     const [selectedIcon1, setSelectedIcon1] = useState('add'); // Set a default icon
     const [selectedIcon2, setSelectedIcon2] = useState('add'); // Set a default icon
     const [selectedIcon3, setSelectedIcon3] = useState('add'); // Set a default icon
+    // list for the three goal's names, curr values and target values
+    const [goalNameList, setGoalNameList] = useState(['', '', '']);
+    const [currentNumberList, setCurrentNumberList] = useState([0, 0, 0]);
+    const [targetNumberList, setTargetNumberList] = useState([0, 0, 0]);
+
+    useEffect(() => {
+        console.log('Updated currentNumberList:', currentNumberList);
+        console.log('Updated goalNameList:', goalNameList);
+      }, [currentNumberList, goalNameList]);
 
     const toggleModal = () => {
-        setModalVisible(!modalVisible);
+        //setting up a goal
+        if (selectedIcon1 == 'add') {
+            setModalVisible(!modalVisible);
+        } else { //updating
+            setgoalVisible(!goalVisible);
+        }
     };
-
     const closeModal = () => {
-        toggleModal();
+        setModalVisible(false);
+        setgoalVisible(false);
     };
 
     const toggleModal2 = () => {
-        setmodalVisible2(!modalVisible2);
+        //setting up a goal
+        if (selectedIcon2 == 'add') {
+            setModalVisible2(!modalVisible2);
+        } else { //updating
+            setgoalVisible2(!goalVisible2);
+        }
     };
-
     const closeModal2 = () => {
-        toggleModal2();
+        setModalVisible2(false);
+        setgoalVisible(false);
     };
 
     const toggleModal3 = () => {
-        setmodalVisible3(!modalVisible3);
+        //setting up a goal
+        if (selectedIcon3 == 'add') {
+            setModalVisible3(!modalVisible3);
+        } else { //updating
+            setgoalVisible3(!goalVisible3);
+        }
     };
-
     const closeModal3 = () => {
-        toggleModal3();
+        setModalVisible3(false);
+        setgoalVisible(false);
     };
 
-    const handleIconSelect = (iconName, num) => {
+    const handleIconSelect = (iconName, num, goalName, Curr, Target) => {
+        console.log(goalName);
+        console.log(Curr);
+        console.log(Target);
         if (num == 1) {
+            setGoalNameList(goalNameList => [goalName, goalNameList[1], goalNameList[2]]);
+            setCurrentNumberList(currentNumberList => [Curr, currentNumberList[1], currentNumberList[2]]);
+            setTargetNumberList(targetNumberList => [Target, targetNumberList[1], targetNumberList[2]]);
             setSelectedIcon1(iconName);
-            //closeModal();
         }
         if (num == 2) {
+            setGoalNameList(goalNameList => [goalNameList[0], goalName, goalNameList[2]]);
+            setCurrentNumberList(currentNumberList => [currentNumberList[0], Curr, currentNumberList[2]]);
+            setTargetNumberList(targetNumberList => [targetNumberList[0], Target, targetNumberList[2]]);
             setSelectedIcon2(iconName);
-           // closeModal2();
         }
         if (num == 3) {
+            console.log('Before update:', currentNumberList);
+            setGoalNameList(goalNameList => [goalNameList[0], goalNameList[1], goalName]);
+            let list_copy = [...currentNumberList];
+            list_copy.splice(2, 1, Curr);
+            setCurrentNumberList(list_copy);
+            setTargetNumberList(targetNumberList => [targetNumberList[0], targetNumberList[1], Target]);
             setSelectedIcon3(iconName);
-           // closeModal3();
+            console.log('After update:', currentNumberList);
         }
     };
 
@@ -126,7 +167,6 @@ export default Profile = ({ userId }) => {
                         fill={20}
                         tintColor="#00B127"
                         backgroundColor="#3d5875"
-
                     />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.button} onPress={toggleModal2}>
@@ -171,24 +211,50 @@ export default Profile = ({ userId }) => {
                         </View>
                     </ScrollView>
                 </View>
-
                 {/* Add button 1 */}
                 <CustomIconPickerModal
                     isVisible={modalVisible}
-                    onSelect={(iconName) => handleIconSelect(iconName, 1)}
+                    onSelect={(iconName, goalName, Curr, Target) => {
+                        handleIconSelect(iconName, 1, goalName, Curr, Target),
+                            closeModal()
+                     }}
                     onClose={closeModal}
                 />
                 {/* Add button 2 */}
                 <CustomIconPickerModal
                     isVisible={modalVisible2}
-                    onSelect={(iconName) => handleIconSelect(iconName, 2)}
+                    onSelect={(iconName, goalName, Curr, Target) => {
+                        handleIconSelect(iconName, 2, goalName, Curr, Target), 
+                        closeModal2()
+                    }}
                     onClose={closeModal2}
                 />
                 {/* Add button 3 */}
                 <CustomIconPickerModal
                     isVisible={modalVisible3}
-                    onSelect={(iconName) => handleIconSelect(iconName, 3)}
+                    onSelect={(iconName, goalName, Curr, Target) => {
+                        handleIconSelect(iconName, 3, goalName, Curr, Target), 
+                        closeModal3()
+                    }}
                     onClose={closeModal3}
+                />
+                {/* Goal Update 1 */}
+                <CustomGoalUpdateModal
+                    isVisible={goalVisible}
+                    onClose={closeModal}
+                    goalInfo={[goalNameList[0], currentNumberList[0], targetNumberList[0]]}
+                />
+                {/* Goal Update 2 */}
+                <CustomGoalUpdateModal
+                    isVisible={goalVisible2}
+                    onClose={closeModal2}
+                    goalInfo={[goalNameList[1], currentNumberList[1], targetNumberList[1]]}
+                />
+                {/* Goal Update 3 */}
+                <CustomGoalUpdateModal
+                    isVisible={goalVisible3}
+                    onClose={closeModal3}
+                    goalInfo={[goalNameList[2], currentNumberList[2], targetNumberList[2]]}
                 />
             </View>
         </View>
@@ -225,21 +291,21 @@ const styles = StyleSheet.create({
     userName: {
         paddingTop: "3%",
         fontSize: 25,
-        fontFamily: "Nunito",
+        fontFamily: "Helvetica Neue",
         textAlign: "center",
         color: "#EEEEEE",
     },
     Goal: {
-        fontSize: 50,
-        fontFamily: "Nunito",
+        fontSize: 45,
+        fontFamily: "Helvetica Neue",
         textAlign: "left",
         color: "#EEEEEE",
         paddingTop: "5%",
         paddingLeft: "5%",
     },
     highlightedStats: {
-        fontSize: 50,
-        fontFamily: "Nunito",
+        fontSize: 45,
+        fontFamily: "Helvetica Neue",
         textAlign: "left",
         color: "#EEEEEE",
         alignSelf: 'center',
@@ -290,7 +356,7 @@ const styles = StyleSheet.create({
         paddingTop: 12,
         alignSelf: 'center',
         paddingLeft: 5,
-        color: "#000000",
+        color: "#00ADB5",
         zIndex: 1,
     },
 });

@@ -33,6 +33,7 @@ export default function CalendarScreen({ navigation }) {
     const [squadList, setSquadList] = React.useState([]);
     const [userName, setUserName] = React.useState('');
     const [squadID, setSquadID] = React.useState('');
+    const [squadLoading, setSquadLoading] = React.useState(true);   
 
     // Modal used to display events of a particular day 
     const EventModal = ({ visible, onClose, events }) => {
@@ -270,6 +271,7 @@ export default function CalendarScreen({ navigation }) {
             try {
                 const userSquads = await fetchSquadsForUser(userID);
                 setSquadList([{ squadID: "", squadName: 'Personal'}, ...userSquads]);
+                setSquadLoading(false);
             } catch (error) {
                 console.error("Error fetching user's squads: ", error);
             }
@@ -291,8 +293,9 @@ export default function CalendarScreen({ navigation }) {
 
     // UseEffect hook to get events from Firestore when the component mounts
     React.useEffect(() => {
-        if (newEventAdded){
-            setIsLoading(true);
+        setIsLoading(true);
+        console.log("is squad loading? ", squadLoading);
+        if (!squadLoading) {
             const fetchEvents = async () => {
                 try {
                     const userEvents = await fetchUserEvents(userID);
@@ -337,7 +340,7 @@ export default function CalendarScreen({ navigation }) {
             };
             fetchEvents();
         }
-    }, [newEventAdded]);
+    }, [squadLoading]);
 
     if (isLoading) {
         return (

@@ -28,7 +28,7 @@ export default Profile = ({ userId }) => {
     useEffect(() => {
         console.log('Updated currentNumberList:', currentNumberList);
         console.log('Updated goalNameList:', goalNameList);
-      }, [currentNumberList, goalNameList]);
+    }, [currentNumberList, goalNameList]);
 
     const toggleModal = () => {
         //setting up a goal
@@ -53,7 +53,7 @@ export default Profile = ({ userId }) => {
     };
     const closeModal2 = () => {
         setModalVisible2(false);
-        setgoalVisible(false);
+        setgoalVisible2(false);
     };
 
     const toggleModal3 = () => {
@@ -66,13 +66,10 @@ export default Profile = ({ userId }) => {
     };
     const closeModal3 = () => {
         setModalVisible3(false);
-        setgoalVisible(false);
+        setgoalVisible3(false);
     };
 
     const handleIconSelect = (iconName, num, goalName, Curr, Target) => {
-        console.log(goalName);
-        console.log(Curr);
-        console.log(Target);
         if (num == 1) {
             setGoalNameList(goalNameList => [goalName, goalNameList[1], goalNameList[2]]);
             setCurrentNumberList(currentNumberList => [Curr, currentNumberList[1], currentNumberList[2]]);
@@ -86,16 +83,24 @@ export default Profile = ({ userId }) => {
             setSelectedIcon2(iconName);
         }
         if (num == 3) {
-            console.log('Before update:', currentNumberList);
             setGoalNameList(goalNameList => [goalNameList[0], goalNameList[1], goalName]);
-            let list_copy = [...currentNumberList];
-            list_copy.splice(2, 1, Curr);
-            setCurrentNumberList(list_copy);
+            setCurrentNumberList(currentNumberList => [currentNumberList[0], currentNumberList[1], Curr]);
             setTargetNumberList(targetNumberList => [targetNumberList[0], targetNumberList[1], Target]);
             setSelectedIcon3(iconName);
-            console.log('After update:', currentNumberList);
         }
     };
+
+    const updateCurrVal = (Curr, num) => {
+        if (num == 1) {
+            setCurrentNumberList(currentNumberList => [Curr, currentNumberList[1], currentNumberList[2]]);
+        }
+        if (num == 2) {
+            setCurrentNumberList(currentNumberList => [currentNumberList[0], Curr, currentNumberList[2]]);
+        }
+        if (num == 3) {
+            setCurrentNumberList(currentNumberList => [currentNumberList[0], currentNumberList[1], Curr]);
+        }
+    }
 
     const getName = async () => {
         const user = await fetchUser(userId);
@@ -128,6 +133,13 @@ export default Profile = ({ userId }) => {
     const removeImage = () => {
         setSelectedImage(null);
     };
+
+    const computefill = (num) => {
+        const currentNumber = currentNumberList[num - 1];
+        const targetNumber = targetNumberList[num - 1];
+        console.log(currentNumber, targetNumber);
+        return (currentNumber / targetNumber) * 100;
+    }
 
     return (
         <View style={styles.background}>
@@ -164,7 +176,7 @@ export default Profile = ({ userId }) => {
                     <AnimatedCircularProgress
                         size={100}
                         width={6}
-                        fill={20}
+                        fill={computefill(1)}
                         tintColor="#00B127"
                         backgroundColor="#3d5875"
                     />
@@ -174,7 +186,7 @@ export default Profile = ({ userId }) => {
                     <AnimatedCircularProgress
                         size={100}
                         width={6}
-                        fill={50}
+                        fill={computefill(2)}
                         tintColor="#00B127"
                         backgroundColor="#3d5875"
                     />
@@ -184,7 +196,7 @@ export default Profile = ({ userId }) => {
                     <AnimatedCircularProgress
                         size={100}
                         width={6}
-                        fill={7}
+                        fill={computefill(3)}
                         tintColor="#00B127"
                         backgroundColor="#3d5875"
                     />
@@ -217,15 +229,15 @@ export default Profile = ({ userId }) => {
                     onSelect={(iconName, goalName, Curr, Target) => {
                         handleIconSelect(iconName, 1, goalName, Curr, Target),
                             closeModal()
-                     }}
+                    }}
                     onClose={closeModal}
                 />
                 {/* Add button 2 */}
                 <CustomIconPickerModal
                     isVisible={modalVisible2}
                     onSelect={(iconName, goalName, Curr, Target) => {
-                        handleIconSelect(iconName, 2, goalName, Curr, Target), 
-                        closeModal2()
+                        handleIconSelect(iconName, 2, goalName, Curr, Target),
+                            closeModal2()
                     }}
                     onClose={closeModal2}
                 />
@@ -233,26 +245,38 @@ export default Profile = ({ userId }) => {
                 <CustomIconPickerModal
                     isVisible={modalVisible3}
                     onSelect={(iconName, goalName, Curr, Target) => {
-                        handleIconSelect(iconName, 3, goalName, Curr, Target), 
-                        closeModal3()
+                        handleIconSelect(iconName, 3, goalName, Curr, Target),
+                            closeModal3()
                     }}
                     onClose={closeModal3}
                 />
                 {/* Goal Update 1 */}
                 <CustomGoalUpdateModal
                     isVisible={goalVisible}
+                    onSelect={(Curr) => {
+                        updateCurrVal(Curr, 1),
+                            closeModal()
+                    }}
                     onClose={closeModal}
                     goalInfo={[goalNameList[0], currentNumberList[0], targetNumberList[0]]}
                 />
                 {/* Goal Update 2 */}
                 <CustomGoalUpdateModal
                     isVisible={goalVisible2}
+                    onSelect={(Curr) => {
+                        updateCurrVal(Curr, 2),
+                            closeModal2()
+                    }}
                     onClose={closeModal2}
                     goalInfo={[goalNameList[1], currentNumberList[1], targetNumberList[1]]}
                 />
                 {/* Goal Update 3 */}
                 <CustomGoalUpdateModal
                     isVisible={goalVisible3}
+                    onSelect={(Curr) => {
+                        updateCurrVal(Curr, 3),
+                            closeModal3()
+                    }}
                     onClose={closeModal3}
                     goalInfo={[goalNameList[2], currentNumberList[2], targetNumberList[2]]}
                 />

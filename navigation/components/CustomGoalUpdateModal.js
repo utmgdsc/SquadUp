@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, View, TouchableOpacity, StyleSheet, Text, TextInput, ScrollView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const CustomGoalUpdateModal = ({ isVisible, onClose, goalInfo }) => {
+const CustomGoalUpdateModal = ({ isVisible, onSelect, onClose, goalInfo }) => {
   const [goalName, setGoalName] = useState(goalInfo[0]);
   const [currentNumber, setCurrentNumber] = useState(goalInfo[1]);
   const [targetNumber, setTargetNumber] = useState(goalInfo[2]);
@@ -12,6 +12,16 @@ const CustomGoalUpdateModal = ({ isVisible, onClose, goalInfo }) => {
     setCurrentNumber(goalInfo[1]);
     setTargetNumber(goalInfo[2]);
   }, [isVisible, goalInfo]);
+
+  const decreaseCount = () => {
+    if (currentNumber > 0) {
+      setCurrentNumber(currentNumber - 1);
+    }
+  };
+
+  const increaseCount = () => {
+    setCurrentNumber(currentNumber + 1);
+  };
 
   return (
     <Modal
@@ -23,30 +33,23 @@ const CustomGoalUpdateModal = ({ isVisible, onClose, goalInfo }) => {
         <View style={styles.modalContainer}>
           {/* Title */}
           <Text style={styles.modalTitle}>Update Goal</Text>
-
-          {/* Title */}
-          <Text style={styles.modalSubtitle}>Current Value: {currentNumber}</Text>
-
+          <Text style={styles.modalSubtitle}>{goalName}</Text>
           {/* Current and target numbers section */}
           <View style={styles.numbersContainer}>
-            <TextInput
-              style={styles.numinput}
-              placeholder="Enter current number"
-              placeholderTextColor="#000000"
-              keyboardType="numeric"
-              onChangeText={(text) => setCurrentNumber(text)}
-            />
-            <TextInput
-              style={styles.numinput}
-              placeholder="Enter target number"
-              placeholderTextColor="#000000"
-              keyboardType="numeric"
-              onChangeText={(text) => setTargetNumber(text)}
-            />
+            <TouchableOpacity style={styles.minusButton} onPress={decreaseCount}>
+              <Text style={styles.textStyle}>-</Text>
+            </TouchableOpacity>
+            {/* Title */}
+            <Text style={styles.modalSubtitle}>Current Value: {currentNumber}</Text>
+            <TouchableOpacity style={styles.plusButton} onPress={increaseCount}>
+              <Text style={styles.textStyle}>+</Text>
+            </TouchableOpacity>
           </View>
-          <View style={styles.iconRow}>
-            <TouchableOpacity style={styles.closeButton}
-              onPress={onClose}>
+          <View style={styles.numbersContainer}>
+            <TouchableOpacity style={styles.addButton} onPress={() => onSelect(currentNumber)}>
+              <Text style={styles.textStyle}>Update Goal</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
               <Text style={styles.textStyle}>Close</Text>
             </TouchableOpacity>
           </View>
@@ -70,11 +73,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#303841',
     marginTop: 10,
+    alignSelf: 'center',
   },
   modalContainer: {
     //flex: 1,
     marginHorizontal: 20,
-    marginVertical: 150,
+    marginVertical: 200,
     backgroundColor: '#EEEEEE',
     borderRadius: 20,
     alignItems: 'center',
@@ -88,39 +92,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    borderRadius: 10,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    width: '80%',
-    color: '#000000',
-  },
-  numinput: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    borderRadius: 10,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    width: 250,
-    color: '#000000',
-  },
-  iconRows: {
-    flexDirection: 'column', // Change to 'column' to stack rows vertically
-    marginTop: 10,
-  },
-  iconRow: {
-    flexDirection: 'row',
-  },
-  iconContainer: {
-    margin: 15,
-    paddingBottom: 10,
-  },
   numbersContainer: {
     marginTop: 20,
+    flexDirection: 'row',
+    alignContent: 'center',
   },
   textStyle: {
     color: 'white',
@@ -148,6 +123,28 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
     marginTop: 25,
+  },
+  minusButton: {
+    borderRadius: 20,
+    padding: 5,
+    elevation: 2,
+    backgroundColor: '#303841',
+    width: '20%',
+    //alignSelf: 'center',
+    marginBottom: 20,
+    marginTop: 25,
+    marginRight: 10,
+  },
+  plusButton: {
+    borderRadius: 20,
+    padding: 5,
+    elevation: 2,
+    backgroundColor: '#303841',
+    width: '20%',
+    //alignSelf: 'center',
+    marginBottom: 20,
+    marginTop: 25,
+    marginLeft: 10,
   },
 });
 

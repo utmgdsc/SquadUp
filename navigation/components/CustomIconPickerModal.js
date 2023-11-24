@@ -77,14 +77,14 @@ const CustomIconPickerModal = ({ isVisible, onSelect, onClose }) => {
               placeholder="Enter current number"
               placeholderTextColor="#000000"
               keyboardType="numeric"
-              onChangeText={(text) => setCurrentNumber(text)}
+              onChangeText={(text) => setCurrentNumber(parseInt(text, 10) || 0)}
             />
             <TextInput
               style={styles.numinput}
               placeholder="Enter target number"
               placeholderTextColor="#000000"
               keyboardType="numeric"
-              onChangeText={(text) => setTargetNumber(text)}
+              onChangeText={(text) => setTargetNumber(parseInt(text, 10) || 0)}
             />
           </View>
           <View style={styles.iconRow}>

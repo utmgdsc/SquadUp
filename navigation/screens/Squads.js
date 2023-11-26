@@ -115,7 +115,7 @@ export default function Squads() {
             >
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalHeaderText}>Create a new Squad</Text>
+                        <Text style={styles.modalTitle}>Create a new Squad</Text>
                         <TextInput
                                 style={styles.roundedInput}
                                 onChangeText={setNewSquadName}
@@ -123,21 +123,23 @@ export default function Squads() {
                                 placeholder='Enter the name of your new squad'
                                 placeholderTextColor='rgba(0, 0, 0, 0.3)'
                         />
-                        <TouchableOpacity
-                            style={[styles.modalButton, styles.modalButtonClose]}
-                            onPress={() => {
-                                handleCreateNewSquad();
-                                setCreateSquadModalVisible(false);
-                            }}
-                        >
-                            <Text style={styles.modalSubmit}>Create</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.modalButton, styles.modalButtonClose]}
-                            onPress={() => setCreateSquadModalVisible(false)}
-                        >
-                            <Text style={styles.modalSubmit}>Close</Text>
-                        </TouchableOpacity>
+                        <View style={styles.iconRow}>
+                            <TouchableOpacity
+                                style={styles.addButton}
+                                onPress={() => {
+                                    handleCreateNewSquad();
+                                    setCreateSquadModalVisible(false);
+                                }}
+                            >
+                                <Text style={styles.textStyle}>Create</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.closeButton}
+                                onPress={() => setCreateSquadModalVisible(false)}
+                            >
+                                <Text style={styles.textStyle}>Close</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -154,7 +156,7 @@ export default function Squads() {
             >
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalHeaderText}>Join an existing Squad</Text>
+                        <Text style={styles.modalTitle}>Join an existing Squad</Text>
                         <TextInput
                                 style={styles.roundedInput}
                                 onChangeText={setJoiningSquad}
@@ -162,21 +164,23 @@ export default function Squads() {
                                 placeholder='Enter the ID of the squad you want to join'
                                 placeholderTextColor='rgba(0, 0, 0, 0.3)'
                         />
-                        <TouchableOpacity
-                            style={[styles.modalButton, styles.modalButtonClose]}
-                            onPress={() => {
-                                handleJoinNewSquad();
-                                setJoinSquadModalVisible(false);
-                            }}
-                        >
-                            <Text style={styles.modalSubmit}>Join</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.modalButton, styles.modalButtonClose]}
-                            onPress={() => setJoinSquadModalVisible(false)}
-                        >
-                            <Text style={styles.modalSubmit}>Close</Text>
-                        </TouchableOpacity>
+                        <View style={styles.iconRow}>
+                            <TouchableOpacity
+                                style={styles.addButton}
+                                onPress={() => {
+                                    handleJoinNewSquad();
+                                    setJoinSquadModalVisible(false);
+                                }}
+                            >
+                                <Text style={styles.textStyle}>Join</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.closeButton}
+                                onPress={() => setJoinSquadModalVisible(false)}
+                            >
+                                <Text style={styles.textStyle}>Close</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -420,7 +424,7 @@ const styles = StyleSheet.create({
         margin: 20,
         backgroundColor: 'white',
         borderRadius: 20,
-        padding: 35,
+        padding: 25,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',
@@ -432,35 +436,9 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
         },
-        modalButton: {
-            borderRadius: 20,
-            padding: 10,
-            elevation: 2,
-            backgroundColor: '#2196F3',
-            width: '50%',
-            alignSelf: 'center',
-            marginBottom: 5,
-            marginTop: 25
-        },
-        modalButtonClose: {
-            backgroundColor: '#2196F3',
-        },
-        modalTextContainer: {
-            marginBottom: 15,
-            alignItems: 'center',
-        },
-        modalText: {
-            textAlign: 'center',
-        },
-        modalHeaderText: {
-            fontWeight: 'bold',
-            fontSize: 20, 
-            color: '#2196F3',
-        },
         roundedInput: {
             height: 40,
             margin: 12,
-            marginTop: 10,
             marginBottom: 10,
             borderColor: '#000',
             borderWidth: 1,
@@ -477,10 +455,42 @@ const styles = StyleSheet.create({
             alignItems: 'center',
             marginTop: 22,
         },
-        modalSubmit: {
+        modalTitle: {
+            fontSize: 30,
+            fontWeight: 'bold',
+            color: '#303841',
+            marginTop: 20,
+            marginBottom: 10,
+            width: '100%'
+        },
+        iconRow: {
+            flexDirection: 'row',
+        },
+        textStyle: {
             color: 'white',
             fontWeight: 'bold',
             textAlign: 'center',
-            fontSize: 18
-        }
+            fontSize: 20,
+        },
+        addButton: {
+            borderRadius: 20,
+            padding: 10,
+            elevation: 2,
+            backgroundColor: '#089000',
+            width: '50%',
+            alignSelf: 'center',
+            marginBottom: 20,
+            marginTop: 25,
+            marginRight: 20,
+        },
+        closeButton: {
+            borderRadius: 20,
+            padding: 10,
+            elevation: 2,
+            backgroundColor: '#8B0000',
+            width: '30%',
+            alignSelf: 'center',
+            marginBottom: 20,
+            marginTop: 25,
+        },
 });

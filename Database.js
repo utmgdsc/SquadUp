@@ -105,6 +105,13 @@ export function joinSquadtoEvent(squadID, eventID) {
     });
 }
 
+export async function addStats(uid, statText) {
+    const docRef = await addDoc(collection(db, "stats"), {
+        userID: uid,
+        text: statText,
+        timestamp: Timestamp.now(),
+    });
+}
 /* 
 Fetch Functions - To fetch data from existing documents inside the database,
 these are used to retrieve data about specific users, squads, etc.    

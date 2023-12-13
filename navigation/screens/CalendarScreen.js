@@ -8,8 +8,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import EventModal from '../components/CustomGoalUpdateModal';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
-export default function CalendarScreen({ navigation }) {
-
+export default function CalendarScreen({ userId } ) {
     // State Variables
     const [markedDates, setMarkedDates] = React.useState({});
     const [eventName, setEventName] = React.useState('');
@@ -20,7 +19,7 @@ export default function CalendarScreen({ navigation }) {
     const [events, setEvents] = React.useState({});
     const [newEventAdded, setNewEventAdded] = React.useState(true);
     const [isLoading, setIsLoading] = React.useState(true);
-    const userID = "JSVhKJSFRaeictUBPlcLJ7nczHb2";
+    console.log(userId)
     const eventTypes = [
         { label: 'Sport', value: 'Sport' },
         { label: 'Workout', value: 'Workout' }
@@ -209,7 +208,7 @@ export default function CalendarScreen({ navigation }) {
             const eventID = await addEvent(eventName, eventType, dateTime);
 
             if (squadOrUserEvent === 'user') {
-                joinUsertoEvent(userID, eventID);
+                joinUsertoEvent(userId, eventID);
             } else {
                 joinSquadtoEvent(squadID, eventID);
             }
@@ -278,7 +277,7 @@ export default function CalendarScreen({ navigation }) {
     React.useEffect(() => {
         const fetchUserSquads = async () => {
             try {
-                const userSquads = await fetchSquadsForUser(userID);
+                const userSquads = await fetchSquadsForUser(userId);
                 setSquadList([{ squadID: "", squadName: 'Personal'}, ...userSquads]);
                 setSquadLoading(false);
             } catch (error) {
@@ -291,14 +290,14 @@ export default function CalendarScreen({ navigation }) {
     React.useEffect(() => {
         const fetchUserData = async () => {
             try { 
-                const userData = await fetchUser(userID);
+                const userData = await fetchUser(userId);
                 setUserName(userData)
             } catch (error) {
                 console.error("Error fetching user name: ", error);
             }
         };
         fetchUserData();
-    }, [userID]);
+    }, [userId]);
 
     // UseEffect hook to get events from Firestore when the component mounts
     React.useEffect(() => {
@@ -307,7 +306,7 @@ export default function CalendarScreen({ navigation }) {
         if (!squadLoading) {
             const fetchEvents = async () => {
                 try {
-                    const userEvents = await fetchUserEvents(userID);
+                    const userEvents = await fetchUserEvents(userId);
                     const newEvents = {}
                     const newMarkedDates = {};
                     userEvents.forEach(event => {

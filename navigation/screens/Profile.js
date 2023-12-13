@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, Button } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, Button, TextInput, Pressable } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { fetchUser, fetchUserGoals } from '../../Database';
+import { fetchUser, fetchUserGoals, addStats } from '../../Database';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import CustomIconPickerModal from '../components/CustomIconPickerModal';
 import CustomGoalUpdateModal from '../components/CustomGoalUpdateModal';
@@ -14,21 +14,40 @@ export default Profile = ({ userId }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [modalVisible2, setModalVisible2] = useState(false);
     const [modalVisible3, setModalVisible3] = useState(false);
+    const [modalVisible4, setModalVisible4] = useState(false);
     const [goalVisible, setgoalVisible] = useState(false);
     const [goalVisible2, setgoalVisible2] = useState(false);
     const [goalVisible3, setgoalVisible3] = useState(false);
     const [selectedIcon1, setSelectedIcon1] = useState('add'); // Set a default icon
     const [selectedIcon2, setSelectedIcon2] = useState('add'); // Set a default icon
     const [selectedIcon3, setSelectedIcon3] = useState('add'); // Set a default icon
+    const [statsList, setStatsList] = useState([]);
     // list for the three goal's names, curr values and target values
     const [goalNameList, setGoalNameList] = useState(['', '', '']);
     const [currentNumberList, setCurrentNumberList] = useState([0, 0, 0]);
     const [targetNumberList, setTargetNumberList] = useState([0, 0, 0]);
+    const [textInputValue, setTextInputValue] = useState('');
 
-    useEffect(() => {
-        console.log('Updated currentNumberList:', currentNumberList);
-        console.log('Updated goalNameList:', goalNameList);
-    }, [currentNumberList, goalNameList]);
+    // useEffect(() => {
+    //     console.log('Updated currentNumberList:', currentNumberList);
+    //     console.log('Updated goalNameList:', goalNameList);
+    // }, [currentNumberList, goalNameList]);
+
+    const updateStats = (value) => {
+        setTextInputValue(value);
+    };
+    const toggleModalStats = () => {
+        setModalVisible4(!modalVisible4);
+    };
+
+    const closeModalStats = () => {
+        if (textInputValue) {
+            // addStats(userId, textInputValue);
+            setStatsList((prevStats) => [...prevStats, textInputValue]);
+            setTextInputValue(''); // Clear the input field
+        }
+        toggleModalStats();
+    };
 
     const toggleModal = () => {
         //setting up a goal
@@ -137,9 +156,13 @@ export default Profile = ({ userId }) => {
     const computefill = (num) => {
         const currentNumber = currentNumberList[num - 1];
         const targetNumber = targetNumberList[num - 1];
-        console.log(currentNumber, targetNumber);
-        return (currentNumber / targetNumber) * 100;
-    }
+        if (typeof currentNumber !== 'number' || typeof targetNumber !== 'number' || targetNumber === 0) {
+            return 0;
+        }
+
+        const fillValue = (currentNumber / targetNumber) * 100;
+        return Math.min(Math.max(fillValue, 0), 100);
+    };
 
     return (
         <View style={styles.background}>
@@ -154,8 +177,9 @@ export default Profile = ({ userId }) => {
             </TouchableOpacity>
 
             {selectedImage && (
+                
                 <TouchableOpacity onPress={removeImage} style={styles.removeButton}>
-                    <Text style={{ color: 'white' }}>Remove image</Text>
+                    <Text style={{ color: 'white', fontSize: 18, }}>Remove Image</Text>
                 </TouchableOpacity>
             )}
 
@@ -207,79 +231,128 @@ export default Profile = ({ userId }) => {
             <Text style={styles.highlightedStats}>
                 Highlighted Stats
             </Text>
+            {/* Add button 1 */}
+            <CustomIconPickerModal
+                isVisible={modalVisible}
+                onSelect={(iconName, goalName, Curr, Target) => {
+                    handleIconSelect(iconName, 1, goalName, Curr, Target),
+                        closeModal()
+                }}
+                onClose={closeModal}
+            />
+            {/* Add button 2 */}
+            <CustomIconPickerModal
+                isVisible={modalVisible2}
+                onSelect={(iconName, goalName, Curr, Target) => {
+                    handleIconSelect(iconName, 2, goalName, Curr, Target),
+                        closeModal2()
+                }}
+                onClose={closeModal2}
+            />
+            {/* Add button 3 */}
+            <CustomIconPickerModal
+                isVisible={modalVisible3}
+                onSelect={(iconName, goalName, Curr, Target) => {
+                    handleIconSelect(iconName, 3, goalName, Curr, Target),
+                        closeModal3()
+                }}
+                onClose={closeModal3}
+            />
+            {/* Goal Update 1 */}
+            <CustomGoalUpdateModal
+                isVisible={goalVisible}
+                onSelect={(Curr) => {
+                    updateCurrVal(Curr, 1),
+                        closeModal()
+                }}
+                onClose={closeModal}
+                goalInfo={[goalNameList[0], currentNumberList[0], targetNumberList[0]]}
+            />
+            {/* Goal Update 2 */}
+            <CustomGoalUpdateModal
+                isVisible={goalVisible2}
+                onSelect={(Curr) => {
+                    updateCurrVal(Curr, 2),
+                        closeModal2()
+                }}
+                onClose={closeModal2}
+                goalInfo={[goalNameList[1], currentNumberList[1], targetNumberList[1]]}
+            />
+            {/* Goal Update 3 */}
+            <CustomGoalUpdateModal
+                isVisible={goalVisible3}
+                onSelect={(Curr) => {
+                    updateCurrVal(Curr, 3),
+                        closeModal3()
+                }}
+                onClose={closeModal3}
+                goalInfo={[goalNameList[2], currentNumberList[2], targetNumberList[2]]}
+            />
 
             {/* Stats */}
             <View style={styles.container}>
                 <View style={styles.scrollableContainer}>
                     <ScrollView>
                         <View style={styles.statsContainer}>
-                            {/* {userStats.map((stat, index) => (
-                            <View key={index} style={styles.statItem}>
-                                <Text style={styles.statLabel}>{stat.label}</Text>
-                                <Text style={styles.statValue}>{stat.value}</Text>
+                            <View style={styles.statsContainer}>
+                                {statsList.map((stat, index) => (
+                                    <Text key={index} style={styles.statItem}>{stat}</Text>
+                                ))}
                             </View>
-                            ))} */}
-                            <Text style={styles.statItem}>Total Games Played</Text>
                         </View>
                     </ScrollView>
                 </View>
-                {/* Add button 1 */}
-                <CustomIconPickerModal
-                    isVisible={modalVisible}
-                    onSelect={(iconName, goalName, Curr, Target) => {
-                        handleIconSelect(iconName, 1, goalName, Curr, Target),
-                            closeModal()
-                    }}
-                    onClose={closeModal}
-                />
-                {/* Add button 2 */}
-                <CustomIconPickerModal
-                    isVisible={modalVisible2}
-                    onSelect={(iconName, goalName, Curr, Target) => {
-                        handleIconSelect(iconName, 2, goalName, Curr, Target),
-                            closeModal2()
-                    }}
-                    onClose={closeModal2}
-                />
-                {/* Add button 3 */}
-                <CustomIconPickerModal
-                    isVisible={modalVisible3}
-                    onSelect={(iconName, goalName, Curr, Target) => {
-                        handleIconSelect(iconName, 3, goalName, Curr, Target),
-                            closeModal3()
-                    }}
-                    onClose={closeModal3}
-                />
-                {/* Goal Update 1 */}
-                <CustomGoalUpdateModal
-                    isVisible={goalVisible}
-                    onSelect={(Curr) => {
-                        updateCurrVal(Curr, 1),
-                            closeModal()
-                    }}
-                    onClose={closeModal}
-                    goalInfo={[goalNameList[0], currentNumberList[0], targetNumberList[0]]}
-                />
-                {/* Goal Update 2 */}
-                <CustomGoalUpdateModal
-                    isVisible={goalVisible2}
-                    onSelect={(Curr) => {
-                        updateCurrVal(Curr, 2),
-                            closeModal2()
-                    }}
-                    onClose={closeModal2}
-                    goalInfo={[goalNameList[1], currentNumberList[1], targetNumberList[1]]}
-                />
-                {/* Goal Update 3 */}
-                <CustomGoalUpdateModal
-                    isVisible={goalVisible3}
-                    onSelect={(Curr) => {
-                        updateCurrVal(Curr, 3),
-                            closeModal3()
-                    }}
-                    onClose={closeModal3}
-                    goalInfo={[goalNameList[2], currentNumberList[2], targetNumberList[2]]}
-                />
+
+
+                {/* Add button */}
+                <View style={styles.addButtonContainer}>
+                    <TouchableOpacity onPress={toggleModalStats}>
+                        <Ionicons name="add-circle" size={50} color="#EEEEEE" />
+                    </TouchableOpacity>
+                    <Modal
+                        animationType="slide"
+                        transparent={true}
+                        visible={modalVisible4}
+                        onRequestClose={closeModalStats}
+                    >
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modalView}>
+                                <TextInput
+                                    style={styles.textInput}
+                                    value={textInputValue}
+                                    placeholder="Enter your stat"
+                                    placeholderTextColor={'#303841'}
+                                    onChangeText={updateStats}
+                                    onSubmitEditing={closeModalStats}
+                                />
+                                <View style={styles.buttonsContainer}>
+                                    <View style={styles.addButton}>
+                                        <Pressable onPress={closeModalStats}>
+                                            <Text style={
+                                                {
+                                                    color: 'white',
+                                                    textAlign: 'center',
+                                                    fontSize: 20,
+                                                }
+                                            }>Submit</Text>
+                                        </Pressable>
+                                    </View>
+                                    <View style={styles.closeButton}>
+                                        <Pressable onPress={closeModalStats}>
+                                            <Text style={
+                                                {
+                                                    color: 'white',
+                                                    textAlign: 'center',
+                                                    fontSize: 20,
+                                                }
+                                            }>Close</Text>
+                                        </Pressable>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
+                </View>
             </View>
         </View>
     );
@@ -310,8 +383,16 @@ const styles = StyleSheet.create({
     background: {
         flex: 1,
         backgroundColor: "#303841",
-
     },
+    removeButton: {
+        backgroundColor: 'red',
+        marginTop: 10,
+        alignItems: 'center',
+        borderRadius: 10,
+        height: 30,
+        width: '50%',
+        alignSelf: 'center',
+      },
     userName: {
         paddingTop: "3%",
         fontSize: 25,
@@ -348,6 +429,28 @@ const styles = StyleSheet.create({
         marginLeft: "5%",
         marginRight: "5%",
     },
+    buttonsContainer: {
+        marginTop: 20,
+        flexDirection: 'row',
+        alignContent: 'center',
+        justifyContent: 'space-between',
+    },
+    addButton: {
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2,
+        backgroundColor: '#089000',
+        width: '50%',
+        alignSelf: 'center',
+    },
+    closeButton: {
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2,
+        backgroundColor: '#8B0000',
+        width: '50%',
+        alignSelf: 'center',
+    },
     container: {
         flex: 1,
         flexDirection: 'row',
@@ -355,7 +458,7 @@ const styles = StyleSheet.create({
         paddingTop: "5%",
     },
     scrollableContainer: {
-        height: "50%",
+        height: "60%",
         backgroundColor: '#EEEEEE',
         width: "75%",
         borderRadius: 15,
@@ -381,6 +484,28 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         paddingLeft: 5,
         color: "#00ADB5",
-        zIndex: 1,
+    },
+    textInput: {
+        height: 40,
+        borderColor: '#303841',
+        borderWidth: 1,
+        marginBottom: 20,
+        padding: 8,
+        width: '80%',
+        borderRadius: 10,
+    },
+    modalView: {
+        borderColor: '#00ADB5',
+        borderWidth: 2,
+        margin: 20,
+        borderRadius: 20,
+        backgroundColor: '#EEEEEE',
+        padding: 35,
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 5,
+        width: '80%',  // Adjust the width to your desired size
+        alignSelf: 'center',  // Center the modal horizontally
+        marginTop: '50%',  // Adjust the marginTop to position the modal vertically
     },
 });

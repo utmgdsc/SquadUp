@@ -5,6 +5,8 @@ import { addEvent, fetchSquadEvents, fetchSquadName, fetchSquadsForUser, fetchUs
 import { Timestamp } from 'firebase/firestore';
 import DropDownPicker from 'react-native-dropdown-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import EventModal from '../components/CustomGoalUpdateModal';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export default function CalendarScreen({ navigation }) {
 
@@ -50,11 +52,11 @@ export default function CalendarScreen({ navigation }) {
                         {/* events holds the selected day's events - these are queried and displayed */}
                             <View style={styles.modalTextContainer}>
                                 {eventsForDay.map((event, eventIndex) => (
-                                    <Text key={eventIndex} style={styles.modalText}>
+                                    <Text key={eventIndex} style={{ textAlign: 'center' }}>
                                         {event.userOrSquad === "user" ? (
-                                            <Text style={styles.modalHeaderText}>Personal Event</Text>
+                                            <Text style={styles.modalHeaderTextPersonal}>Personal Event</Text>
                                         ) : (
-                                            <Text style={styles.modalHeaderText}>{event.userOrSquad} Event</Text>
+                                            <Text style={styles.modalHeaderTextSquad}>{event.userOrSquad} Event</Text>
                                         )}
                                         {`\n Event Name: ${event.name} \n`}
                                         {`Event Type: ${event.type} \n`}
@@ -62,7 +64,7 @@ export default function CalendarScreen({ navigation }) {
                                 ))}
                             </View>
                         <TouchableOpacity
-                            style={[styles.modalButton, styles.modalButtonClose]}
+                            style={styles.closeButton}
                             onPress={onClose}
                         >
                             <Text style={styles.textStyle}>Close</Text>
@@ -83,7 +85,7 @@ export default function CalendarScreen({ navigation }) {
             >
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalHeaderText}>Add Event</Text>
+                        <Text style={styles.modalTitle}>Add Event</Text>
                         <TouchableOpacity
                             style = {styles.modalButton}
                             onPress={() => setShowDatePicker(true)}
@@ -128,14 +130,14 @@ export default function CalendarScreen({ navigation }) {
                                 setOpen={setOpenSquadList}
                                 setValue={setValueSquadList}
                                 items={squadList.map(squad => ({
-                                    label: squad.squadName,
+                                    label: squad.squadName !== 'Personal' ? squad.squadName + ' (Squad)' : squad.squadName,
                                     value: squad.squadID,
                                 }))}
                                 // defaultValue={eventType}
                                 dropDownStyle={{ backgroundColor: '#EEEEEE', marginTop: 10, marginBottom: 10 }}
                                 labelStyle={{
                                     fontWeight: "bold",
-                                    textAlign: 'center', // Center-align the label text
+                                    textAlign: 'center',
                                     fontSize: 20,
                                 }}
                                 textStyle={{
@@ -150,21 +152,23 @@ export default function CalendarScreen({ navigation }) {
                                 }}
                             />
                         </View>
-                        <TouchableOpacity
-                            style={[styles.modalButton, styles.modalButtonClose]}
-                            onPress={() => {
-                                handleAddEvent();
-                                setAddEventModalVisible(false);
-                            }}
-                        >
-                            <Text style={styles.textStyle}>Submit</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.modalButton, styles.modalButtonClose]}
-                            onPress={() => setAddEventModalVisible(false)}
-                        >
-                            <Text style={styles.textStyle}>Close</Text>
-                        </TouchableOpacity>
+                        <View style={styles.iconRow}>
+                            <TouchableOpacity
+                                style={styles.addButton}
+                                onPress={() => {
+                                    handleAddEvent();
+                                    setAddEventModalVisible(false);
+                                }}
+                            >
+                                <Text style={styles.textStyle}>Submit</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.closeButton}
+                                onPress={() => setAddEventModalVisible(false)}
+                            >
+                                <Text style={styles.textStyle}>Close</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>
@@ -196,6 +200,11 @@ export default function CalendarScreen({ navigation }) {
     // Function to add an event to the Firestore database 
     const handleAddEvent = async () => {
         try{
+            if (!selectedDate || !eventName.trim() || !eventType || !squadOrUserEvent) {
+                Alert.alert('Error', 'Please fill in all the required fields.');
+                return;
+            }
+
             const dateTime = Timestamp.fromDate(new Date(selectedDate));
             const eventID = await addEvent(eventName, eventType, dateTime);
 
@@ -346,7 +355,7 @@ export default function CalendarScreen({ navigation }) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="white" />
-                <Text style = {styles.loadingText}>Calendar Loading...</Text>
+                <Text style = {{ color: 'white', fontWeight: 'bold' }}>Calendar Loading...</Text>
             </View>
         );
     }
@@ -471,9 +480,6 @@ const styles = StyleSheet.create({
         marginBottom: 5,
         marginTop: 25
     },
-    modalButtonClose: {
-        backgroundColor: '#2196F3',
-    },
     pageButtonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
@@ -497,13 +503,15 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         alignItems: 'center',
     },
-    modalText: {
-        textAlign: 'center',
-    },
-    modalHeaderText: {
+    modalHeaderTextPersonal: {
         fontWeight: 'bold',
         fontSize: 20, 
-        color: '#2196F3',
+        color: 'green',
+    },
+    modalHeaderTextSquad: {
+        fontWeight: 'bold',
+        fontSize: 20, 
+        color: 'orange',
     },
     addEventTitle: {
         fontWeight: 'bold',
@@ -517,8 +525,41 @@ const styles = StyleSheet.create({
         alignItems: "center",
         backgroundColor: "#303841"
     },
-    loadingText: {
-        color: "white",
-        fontWeight: "bold"
+    modalTitle: {
+        fontSize: 40,
+        fontWeight: 'bold',
+        color: '#303841',
+        marginTop: 20,
+        marginBottom: 20,
+    },
+    iconRow: {
+        flexDirection: 'row',
+    },
+    textStyle: {
+        color: 'white',
+        fontWeight: 'bold',
+        textAlign: 'center',
+        fontSize: 20,
+    },
+    addButton: {
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2,
+        backgroundColor: '#089000',
+        width: '50%',
+        alignSelf: 'center',
+        marginBottom: 20,
+        marginTop: 25,
+        marginRight: 20,
+    },
+    closeButton: {
+        borderRadius: 20,
+        padding: 10,
+        elevation: 2,
+        backgroundColor: '#8B0000',
+        width: '30%',
+        alignSelf: 'center',
+        marginBottom: 20,
+        marginTop: 25,
     },
 });

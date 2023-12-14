@@ -1,4 +1,4 @@
-import { collection, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getDoc, documentId } from "firebase/firestore";
+import { collection, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getDoc, documentId, collectionGroup } from "firebase/firestore";
 import { db } from './firebaseConfig';
 
 /* 
@@ -162,6 +162,24 @@ export async function fetchUserEvents(uid) {
     return eventList;
 }
 
+export async function fetchDropInEvents() {
+    let eventsMap = [];
+
+    const eventsSnapshot = await getDocs(collectionGroup(db, 'Events'));
+    eventsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const event = {
+            title: doc.ref.parent.parent.id,
+            activityName: `${data.Name}: ${data.Location}`,
+            time: data.Time,
+        };
+        eventsMap.push(event);
+    });
+
+    return eventsMap;
+}
+
+
 /* given uid (user id), returns a list of goals with the format - 
     [
         {"completed": false, "current": 0, "name": "Run 10km this week.", "target": 10}, 
@@ -266,10 +284,10 @@ export async function fetchSquadName(squadID) {
     const q = query(squadNamesRef, where(documentId(), "==", squadID));
     const querySnapshot = await getDocs(q);
 
-    if(!querySnapshot.empty) {
+    if (!querySnapshot.empty) {
         return querySnapshot.docs[0].data().name;
     }
-    else{
+    else {
         // console.error("Squad with ID ${squadID} does not exist");
         return null;
     }

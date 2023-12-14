@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { fetchDropInEvents } from '../../Database';
 
 const EventComponent = ({ title, activityName, time }) => {
-  const handleJoinPress = () => {
+  const handleJoinPress = async () => {
     // Add logic to handle joining the event
-    console.log(`Joining event: ${title}`);
+    //console.log(`Joining event: ${title}`);
+    const events = await fetchDropInEvents();
+    console.log(events);
   };
 
   return (

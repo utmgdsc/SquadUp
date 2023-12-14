@@ -1,27 +1,30 @@
 import * as React from 'react';
+import { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import EventComponent from '../components/EventComponent';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { fetchDropInEvents } from '../../Database';
 
 export default function Events({ navigation }) {
-    // Sample data for events
-    const events = [
-        { title: 'Monday, October 9', activityName: 'Morning Run', time: '6:00AM - 7:00AM' },
-        { title: 'Monday, October 9', activityName: 'Lunch Yoga: Studio A', time: '12:00PM - 1:00PM' },
-        { title: 'Tuesday, October 10', activityName: 'Drop-in Basketball: Gym A and B', time: '7:30AM - 9:00AM' },
-        { title: 'Wednesday, October 11', activityName: 'Yoga Class: Studio C', time: '5:00PM - 6:30PM' },
-        { title: 'Wednesday, October 11', activityName: 'Evening Run', time: '6:30PM - 7:30PM' },
-        { title: 'Thursday, October 12', activityName: 'Swimming: Pool B', time: '10:00AM - 11:30AM' },
-        { title: 'Friday, October 13', activityName: 'Gym Workout: Fitness Center', time: '4:00PM - 5:30PM' },
-        { title: 'Saturday, October 14', activityName: 'Cycling Group: Trail Ride', time: '8:00AM - 10:00AM' },
-        // Add more events as needed
-    ];
+    const [events, setEvents] = React.useState([]);
     const [dayList, setDayList] = React.useState(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
     const [openDayList, setOpenDayList] = React.useState(false);
     const [valueDayList, setValueDayList] = React.useState([]);
     const [activeDay, setActiveDay] = React.useState('Day'); // This is the Day for which all info will be rendered 
     
     const filteredEvents = events.filter(event => event.title.startsWith(activeDay));
+
+    React.useEffect(() => {
+        const fetchandLogDropInEvents = async () => {
+            try {
+                const events = await fetchDropInEvents();
+                setEvents(events);
+            } catch (error) {
+                console.error("Error fetching user's squads: ", error);
+            }
+        }
+        fetchandLogDropInEvents();
+    }, []);
 
     return (
         <View style={styles.container}>

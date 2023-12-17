@@ -1,14 +1,33 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { fetchDropInEvents } from '../../Database';
+import { fetchDropInEvents, joinUsertoEvent, addEvent } from '../../Database';
+import { Timestamp } from 'firebase/firestore';
 
-const EventComponent = ({ title, activityName, time }) => {
-  const handleJoinPress = async () => {
-    // Add logic to handle joining the event
-    //console.log(`Joining event: ${title}`);
-    const events = await fetchDropInEvents();
-    console.log(events);
+const EventComponent = ({ title, activityName, time, userId }) => {
+  const handleJoinPress = async (title, activityName, userId) => {
+    const dateTime = Timestamp.fromDate(new Date(convertTitleToDate(title)));
+    const eventID = await addEvent(activityName, 'Sport', dateTime);
+    console.log(eventID);
+
+    joinUsertoEvent(userId, eventID);
+    setJoinText('Joined');
+    setButtonColor('#084000');
   };
+
+  function convertTitleToDate(title) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const [, month, day, year] = title.split(/[, ]+/);
+    const monthIndex = months.indexOf(month) + 1; // January is 0 in JavaScript, so add 1
+    const formattedDate = `${year}-${monthIndex < 10 ? '0' : ''}${monthIndex}-${day < 10 ? '0' : ''}${day}`;
+    return formattedDate;
+  }
+
+  const [joinText, setJoinText] = React.useState('Join');
+  const [buttonColor, setButtonColor] = React.useState('#089000');
 
   return (
     <View style={styles.eventContainer}>
@@ -17,8 +36,8 @@ const EventComponent = ({ title, activityName, time }) => {
         <Text style={styles.subtitle}>{activityName}</Text>
         <Text style={styles.subtitle}>{`Time: ${time}`}</Text>
       </View>
-      <TouchableOpacity onPress={handleJoinPress} style={styles.joinButton}>
-        <Text style={styles.joinButtonText}>Join</Text>
+      <TouchableOpacity onPress={() => handleJoinPress(title, activityName, userId)} style={[styles.joinButton, { backgroundColor: buttonColor }]}>
+        <Text style={styles.joinButtonText}>{joinText}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -48,7 +67,6 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   joinButton: {
-    backgroundColor: '#089000',
     padding: 10,
     borderRadius: 20,
   },

@@ -1,15 +1,20 @@
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 from selenium import webdriver
+from selenium.common import NoSuchElementException, TimeoutException, \
+    WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 from bs4 import BeautifulSoup
 
-from datetime import datetime, timedelta
+# For Firebase Function:
+import firebase_admin
+from firebase_admin import credentials
 
-import time
+from firebase_admin import firestore
+
+# for conversion function
+from datetime import datetime, timedelta
 
 
 def is_within_week(today, datetime_value):
@@ -38,7 +43,7 @@ def is_within_week(today, datetime_value):
     event_datetime = datetime.strptime(datetime_value, "%Y-%m-%d %H:%M:%S")
 
     # Calculate a week from today
-    one_week_from_today = today + timedelta(days=7)
+    one_week_from_today = today + timedelta(days=6)  # changed from 7 to 6
 
     # Check if the event date is within a week from today
     within_week = today <= event_datetime <= one_week_from_today
@@ -46,64 +51,137 @@ def is_within_week(today, datetime_value):
     return within_week
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
+def format_datetime(input_date):
+    # Convert input date string to datetime object
+    input_datetime = datetime.strptime(input_date, "%Y-%m-%d %H:%M:%S")
+
+    # Format the datetime object to the desired format (Friday, December 20, 2024)
+    formatted_date = input_datetime.strftime("%A, %B %d, %Y")
+
+    return formatted_date
+
+
+def webscrape_logic():
+    finished = True
 
     # Get today's date
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
+    # Replace 'path_to_webdriver' with the path to your chrome webdriver executable if the webdriver is not in PATH .
+    try:
+        # driver = webdriver.Chrome(executable_path='C:/path/to/chromedriver.exe')
+        driver = webdriver.Chrome()
+    except Exception as e:
+        print(f"Error initializing WebDriver: {e}")
+        return False, {}  # Exit the script
 
-    driver = webdriver.Chrome()
     driver.implicitly_wait(10)
 
-    # URL of the webpage has been hard set to list since the webscraper is being codded assuming the format of the website is in list form.
     # offset variable will be used to control what day we are looking at
     stop = False
     offset = 1
 
-    while not stop:
+    events_dict = {}
 
-        url = 'https://utmeagles.loxi.io/list/future/' + str(offset)
+    try:
+        while not stop:
+            
+            # Load the webpage
+            url = 'https://utmeagles.loxi.io/list/future/' + str(offset)
+            driver.get(url)
+            try:
+                wait = WebDriverWait(driver, 30)
+                element = wait.until(
+                    EC.presence_of_element_located((By.TAG_NAME, "time")))
+                # time.sleep(20)
+            except TimeoutException:
 
-        # Load the webpage
-        driver.get(url)
+                return False, events_dict
+            except NoSuchElementException:
+                return False, events_dict
+            
 
-        # Wait for the time element to appear
-        wait = WebDriverWait(driver, 30)
-        element = wait.until(
-            EC.presence_of_element_located((By.TAG_NAME, "time")))
-        # time.sleep(20)
 
-        # Get the HTML source of the loaded page
-        html_code = driver.page_source
-        soup = BeautifulSoup(html_code, 'html.parser')
+            # Wait for the specific time element to appear
 
-        # # Print the HTML code to the console
-        # print(soup.prettify())
 
-        empty_class_div = soup.find('div', class_='')
-        all_days = empty_class_div.find('ul')
+            # Get the HTML source of the loaded page
+            html_code = driver.page_source
+            soup = BeautifulSoup(html_code, 'html.parser')
 
-        for day in all_days:
-            time_tag = day.find("time")
-            datetime_value = time_tag.get('datetime')
-            print(datetime_value)
-            if is_within_week(today, datetime_value) is True:
-                events = day.find_all("li")
-                for event in events:
-                    eventName = event.find("a").text
-                    # print(eventName)
+            empty_class_div = soup.find('div', class_='')
+            all_days = empty_class_div.find('ul')
 
-                    eventTime = event.find("time").text.strip()
-                    # print(eventTime)
+            for day in all_days:
+                time_tag = day.find("time")
+                datetime_value = time_tag.get('datetime')
+                # print(datetime_value)
+                if is_within_week(today, datetime_value) is True:
+                    event_date = format_datetime(datetime_value)
+                    # insert function call to change formatting of datetime
+                    currEventlist = events_dict.setdefault(event_date, [])
+                    events = day.find_all("li")
+                    for event in events:
+                        try:
+                            eventName = event.find("a").text
+                            # print(eventName)
+                        except Exception as e:
+                            continue
+                        try:
+                            eventTime = event.find("time").text.strip()
+                            # print(eventTime)
+                        except Exception as e:
+                            eventTime = "NA"
 
-                    eventLocation = event.find("address").strong.text
+                        try:
+                            eventLocation = event.find("address").strong.text
+                        except Exception as e:
+                            eventLocation = "NA"
 
-                    info = (eventName, eventTime, eventLocation)
-                    print(info)
-            else:
-                stop = True
+                        info = (eventName, eventTime, eventLocation)
+                        # print(info)
+                        currEventlist.append(info)
 
-        offset += 1
-    # Close the browser
-    driver.quit()
+                    events_dict[event_date] = currEventlist
+
+                else:
+                    stop = True
+            offset += 1
+    except WebDriverException as e:
+        # Handle WebDriverException (e.g., if the page fails to load)
+        print(f"WebDriverException: {e}")
+        finished = False
+
+    except Exception as e:
+        # Handle other exceptions
+        print(f"An error occurred: {e}")
+        finished = False
+
+    finally:
+        # Close the browser
+        driver.quit()
+        return (
+            finished, events_dict)  # if no exception was met, it'll return True
+
+
+def sendevents(events_dict):
+
+    cred = credentials.Certificate("ServiceAccountKey.json")
+    firebase_admin.initialize_app(cred)
+
+    db = firestore.client()
+    for date, events in events_dict.items():
+        for event in events:
+            event_name, event_time, event_location = event
+            # print(f"Date: {date}, Name: {event_name}, Time: {event_time}, Location: {event_location}")
+            db.collection('Drop_In_Events').document(date).collection('Events').add(
+                {'Name': event_name, 'Time': event_time,
+                 'Location': event_location})
+
+
+if __name__ == '__main__':
+    webscrape, events = webscrape_logic()
+    if webscrape == True:
+        sendevents(events)
+    else:
+        exit(1)

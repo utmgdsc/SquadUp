@@ -8,7 +8,6 @@ const EventComponent = ({ title, activityName, time, userId, eventId }) => {
     const dateTime = Timestamp.fromDate(new Date(convertTitleToDate(title)));
 
     const returnCode = await joinUsertoEvent(userId, eventId);
-    console.log(returnCode);
     if (returnCode == 1){
       alert("You have already joined this event");
     } else {

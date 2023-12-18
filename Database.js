@@ -179,6 +179,37 @@ export async function fetchUserEvents(uid) {
     return eventList;
 }
 
+// This one looks at events for main screen (date time needed)
+export async function fetchUserEventsforMainScreen(uid) {
+    const eventID_list = []
+    const eventList = []
+    console.log(uid);
+    const userEventsRef = collection(db, "users_events_join");
+    const q = query(userEventsRef, where("userID", "==", uid));
+ 
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        eventID_list.push(doc.data().eventID)
+    })
+ 
+    const EventsRef = collection(db, "events");
+    for (let i = 0; i < eventID_list.length; i++) {
+        const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach((doc) => {
+            // Convert Firestore Timestamp to JavaScript Date
+            const DateTime = doc.data().DateTime.toDate();
+            // Include DateTime in the data
+            eventList.push({
+                ...doc.data(),
+                DateTime: DateTime
+            });
+        })
+    }
+ 
+    return eventList;
+ }
+
 // This one looks at drop in events
 export async function fetchUserDropInEvents(uid) {
     const eventID_list = []

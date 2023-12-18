@@ -9,7 +9,7 @@ export default function MainScreen({ userId }) {
 
     const getName = async () => {
         const user = await fetchUser(userId);
-        setUserName(user);
+        setUserName(user.name);
     }
     const [events, setEvents] = useState([]);
     getName();

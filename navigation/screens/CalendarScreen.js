@@ -35,6 +35,31 @@ export default function CalendarScreen({ userId } ) {
     const [squadID, setSquadID] = React.useState('');
     const [squadLoading, setSquadLoading] = React.useState(true);   
 
+    const Legend = () => {
+        return (
+            <View style={styles.legendContainer}>
+                <View style={styles.legendItem}>
+                    <View style={styles.outerDot}>
+                        <View style={[styles.dot, { backgroundColor: 'green' }]} />
+                    </View>
+                    <Text style={styles.legendText}> Personal Events</Text>
+                </View>
+                <View style={styles.legendItem}>
+                    <View style={styles.outerDot}>
+                        <View style={[styles.dot, { backgroundColor: 'orange' }]} />
+                    </View>
+                    <Text style={styles.legendText}> Squad Events</Text>
+                </View>
+                <View style={styles.legendItem}>
+                    <View style={styles.outerDot}>
+                        <View style={[styles.dot, { backgroundColor: 'purple' }]} />
+                    </View>
+                    <Text style={styles.legendText}> Both Personal and Squad Events</Text>
+                </View>
+            </View>
+        )
+    }
+
     // Modal used to display events of a particular day 
     const EventModal = ({ visible, onClose, events }) => {
         const eventsForDay = events[selectedDate] || []
@@ -381,6 +406,7 @@ export default function CalendarScreen({ userId } ) {
                     </TouchableOpacity>
                     {addEventModal()}
                 </View>
+                <Legend />
             </View>
         </KeyboardAvoidingView>
     );
@@ -560,4 +586,40 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         marginTop: 25,
     },
+    legendContainer: {
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
+        paddingHorizontal: 20,
+        backgroundColor: '#303841',
+        borderRadius: 10,
+        marginBottom: 20,
+        marginHorizontal: 20,
+    },
+    legendItem: {
+        alignItems: 'center',
+        flexDirection: 'row',
+        marginVertical: 5,
+        flexShrink: 1
+    },
+    dot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+    },
+    outerDot: {
+        width: 15,
+        height: 15,
+        borderRadius: 10,
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
+        marginVertical: 5,
+    },
+    legendText: {
+        color: 'white', 
+        fontWeight: 'bold',
+        fontSize: 15
+    }
 });

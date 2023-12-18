@@ -176,7 +176,6 @@ export async function addStats(uid, statText) {
     const docRef = await addDoc(collection(db, "stats"), {
         userID: uid,
         text: statText,
-        timestamp: Timestamp.now(),
     });
 }
 /* 
@@ -205,11 +204,54 @@ export async function fetchUser(uid) {
     return { name: name[0], profilePic: profilePic[0] }; 
 }
 
+export async function fetchUserStats(uid) {
+    const statsList = [];
+    
+    try {
+        const statsRef = collection(db, "stats");
+        const q = query(statsRef, where("userID", "==", uid));
+        const querySnapshot = await getDocs(q);
+
+        querySnapshot.forEach((doc) => {
+            statsList.push(doc.data().text);
+        });
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+        // Handle the error as needed
+        throw error;
+    }
+
+    return statsList;
+}
+
+export async function deleteStat(userId, statContent) {
+    try {
+        const statsRef = collection(db, "stats");
+        console.log(statContent)
+        const q = query(statsRef, where("text", "==", statContent), where("userId", "==", userId));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.docs.length === 0) {
+            console.log('Stat not found.');
+            return; 
+        }
+
+        // Assuming there's only one stat with the given content for a specific user
+        const statDoc = querySnapshot.docs[0];
+        await deleteDoc(statDoc.ref);
+        
+        console.log(`Stat with content "${statContent}" deleted successfully.`);
+    } catch (error) {
+        console.error('Error deleting stat:', error);
+        // Handle the error as needed
+        throw error;
+    }
+}
+
 // This one looks at events
 export async function fetchUserEvents(uid) {
     const eventID_list = []
     const eventList = []
-    console.log(uid);
     const userEventsRef = collection(db, "users_events_join");
     const q = query(userEventsRef, where("userID", "==", uid));
 
@@ -235,7 +277,6 @@ export async function fetchUserEvents(uid) {
 export async function fetchUserEventsforMainScreen(uid) {
     const eventID_list = []
     const eventList = []
-    console.log(uid);
     const userEventsRef = collection(db, "users_events_join");
     const q = query(userEventsRef, where("userID", "==", uid));
  
@@ -266,7 +307,6 @@ export async function fetchUserEventsforMainScreen(uid) {
 export async function fetchUserDropInEvents(uid) {
     const eventID_list = []
     const eventList = []
-    console.log(uid);
     const userEventsRef = collection(db, "users_events_join");
     const q = query(userEventsRef, where("userID", "==", uid));
 
@@ -291,7 +331,6 @@ export async function fetchUserDropInEvents(uid) {
         })
     }
 
-    console.log(eventList);
     return eventList;
 }
 

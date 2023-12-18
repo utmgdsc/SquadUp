@@ -25,6 +25,9 @@ const Register = () => {
                 alert("Registration Failed: Name too long)");
                 return;
             }
+            setEmail(email.trim());
+            setPassword(password.trim());
+            setName(name.trim());
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             addUser(userCredential.user.uid, name);
             alert("Registration successful")

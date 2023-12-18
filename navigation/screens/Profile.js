@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, Button, TextInput, Pressable } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { fetchUser, fetchUserGoals, addStats } from '../../Database';
+import { fetchUser, fetchUserGoals, updateGoalCurrentValue, addUser, addGoal, joinUsertoGoal, deleteUserGoal } from '../../Database';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import CustomIconPickerModal from '../components/CustomIconPickerModal';
 import CustomGoalUpdateModal from '../components/CustomGoalUpdateModal';
 import { Ionicons } from '@expo/vector-icons';
 
-
 export default Profile = ({ userId }) => {
-    const [selectedImage, setSelectedImage] = useState(null);
+    const [profilePic, setProfilePic] = useState(null);
     const [userName, setUserName] = useState(null);
+    const [goalIdList, setGoalIdList] = useState([null, null, null]);
     const [modalVisible, setModalVisible] = useState(false);
     const [modalVisible2, setModalVisible2] = useState(false);
     const [modalVisible3, setModalVisible3] = useState(false);
@@ -20,18 +20,121 @@ export default Profile = ({ userId }) => {
     const [goalVisible3, setgoalVisible3] = useState(false);
     const [selectedIcon1, setSelectedIcon1] = useState('add'); // Set a default icon
     const [selectedIcon2, setSelectedIcon2] = useState('add'); // Set a default icon
-    const [selectedIcon3, setSelectedIcon3] = useState('add'); // Set a default icon
+    const [selectedIcon3, setSelectedIcon3] = useState('add'); // Set a default ico
     const [statsList, setStatsList] = useState([]);
-    // list for the three goal's names, curr values and target values
     const [goalNameList, setGoalNameList] = useState(['', '', '']);
     const [currentNumberList, setCurrentNumberList] = useState([0, 0, 0]);
     const [targetNumberList, setTargetNumberList] = useState([0, 0, 0]);
     const [textInputValue, setTextInputValue] = useState('');
 
-    // useEffect(() => {
-    //     console.log('Updated currentNumberList:', currentNumberList);
-    //     console.log('Updated goalNameList:', goalNameList);
-    // }, [currentNumberList, goalNameList]);
+    useEffect(() => {
+        fetchUser(userId).then(userInfo => setProfilePic(userInfo.profilePic));
+        loadUserGoals();
+    }, [userId]);
+
+    const addNewGoal = async (iconName, goalName, currentNumber, targetNumber, index) => {
+        try {
+            // Add the goal and obtain the goalId
+            const goalId = await addGoal(goalName, currentNumber, targetNumber, iconName);
+    
+            // Set the goalId in the state
+            setGoalIdList((prevGoalIds) => {
+                const updatedGoalIds = [...prevGoalIds];
+                updatedGoalIds[index] = goalId;
+                return updatedGoalIds;
+            });
+    
+            // Join user to the goal
+            joinUsertoGoal(userId, goalId);
+    
+        } catch (error) {
+            console.error('Error adding goal:', error);
+        }
+    };
+
+    const loadUserGoals = async () => {
+        try {
+            const userGoals = await fetchUserGoals(userId);
+            const goalList = userGoals[0];
+            const goalIdList = userGoals[1];
+    
+            setGoalIdList(goalIdList);
+    
+            // Initialize temporary arrays to hold the updated values
+            let updatedGoalNameList = [...goalNameList];
+            let updatedCurrentNumberList = [...currentNumberList];
+            let updatedTargetNumberList = [...targetNumberList];
+    
+            goalList.forEach((goal, index) => {
+                const { current, icon, name, target } = goal;
+    
+                if (index === 0) {
+                    updatedGoalNameList[0] = name;
+                    updatedCurrentNumberList[0] = current;
+                    updatedTargetNumberList[0] = target;
+                    setSelectedIcon1(icon);
+                    computefill(1);
+                } else if (index === 1) {
+                    updatedGoalNameList[1] = name;
+                    updatedCurrentNumberList[1] = current;
+                    updatedTargetNumberList[1] = target;
+                    setSelectedIcon2(icon);
+                    computefill(2);
+                } else if (index === 2) {
+                    updatedGoalNameList[2] = name;
+                    updatedCurrentNumberList[2] = current;
+                    updatedTargetNumberList[2] = target;
+                    setSelectedIcon3(icon);
+                    computefill(3);
+                }
+            });
+
+            setGoalNameList(updatedGoalNameList);
+            setCurrentNumberList(updatedCurrentNumberList);
+            setTargetNumberList(updatedTargetNumberList);
+        } catch (error) {
+            console.error('Error loading user goals:', error);
+        }
+    };
+
+    const resetGoal = async (goalId, goalIndex) => {
+        try {
+            await deleteUserGoal(userId, goalId);
+            
+            setGoalIdList((prevGoalIds) => {
+                const updatedGoalIds = [...prevGoalIds];
+                updatedGoalIds[goalIndex] = null;
+                return updatedGoalIds;
+            });
+        } catch (error) {
+            console.error('Error resetting goal:', error);
+            throw error;
+        }
+    };
+
+    const checkAndResetGoal = async (goalId, currentNumber, targetNumber, defaultIcon, goalIndex) => {
+        if (currentNumber >= targetNumber) {
+            alert('Congratulations! You have reached your goal!');
+            if (goalIndex == 0) {
+                setSelectedIcon1(defaultIcon);
+                setCurrentNumberList(currentNumberList => [0, currentNumberList[1], currentNumberList[2]]);
+                setTargetNumberList(targetNumberList => [0, targetNumberList[1], targetNumberList[2]]);
+            }
+            else if (goalIndex == 1) {
+                setSelectedIcon2(defaultIcon);
+                setCurrentNumberList(currentNumberList => [currentNumberList[0], 0, currentNumberList[2]]);
+                setTargetNumberList(targetNumberList => [targetNumberList[0], 0, targetNumberList[2]]);
+            }
+        
+            else if (goalIndex == 2) {
+                setSelectedIcon3(defaultIcon);
+                setCurrentNumberList(currentNumberList => [currentNumberList[0], currentNumberList[1], 0]);
+                setTargetNumberList(targetNumberList => [targetNumberList[0], targetNumberList[1], 0]);
+            }
+
+            await resetGoal(goalId, goalIndex);
+        }
+    };
 
     const updateStats = (value) => {
         setTextInputValue(value);
@@ -40,12 +143,15 @@ export default Profile = ({ userId }) => {
         setModalVisible4(!modalVisible4);
     };
 
-    const closeModalStats = () => {
+    const addModalStats = () => {
         if (textInputValue) {
-            // addStats(userId, textInputValue);
             setStatsList((prevStats) => [...prevStats, textInputValue]);
-            setTextInputValue(''); // Clear the input field
+            setTextInputValue(''); 
         }
+        closeModalStats();
+    };
+    const closeModalStats = () => {
+        setTextInputValue('');
         toggleModalStats();
     };
 
@@ -65,6 +171,7 @@ export default Profile = ({ userId }) => {
     const toggleModal2 = () => {
         //setting up a goal
         if (selectedIcon2 == 'add') {
+
             setModalVisible2(!modalVisible2);
         } else { //updating
             setgoalVisible2(!goalVisible2);
@@ -112,18 +219,24 @@ export default Profile = ({ userId }) => {
     const updateCurrVal = (Curr, num) => {
         if (num == 1) {
             setCurrentNumberList(currentNumberList => [Curr, currentNumberList[1], currentNumberList[2]]);
+            updateGoalCurrentValue(goalIdList[0], Curr);
+            checkAndResetGoal(goalIdList[num - 1], Curr, targetNumberList[num - 1], 'add', num - 1);
         }
         if (num == 2) {
             setCurrentNumberList(currentNumberList => [currentNumberList[0], Curr, currentNumberList[2]]);
+            updateGoalCurrentValue(goalIdList[1], Curr);
+            checkAndResetGoal(goalIdList[num - 1], Curr, targetNumberList[num - 1], 'add', num - 1);
         }
         if (num == 3) {
             setCurrentNumberList(currentNumberList => [currentNumberList[0], currentNumberList[1], Curr]);
+            updateGoalCurrentValue(goalIdList[2], Curr);
+            checkAndResetGoal(goalIdList[num - 1], Curr, targetNumberList[num - 1], 'add', num - 1);
         }
     }
 
     const getName = async () => {
         const user = await fetchUser(userId);
-        setUserName(user);
+        setUserName(user.name);
     }
 
     getName();
@@ -145,12 +258,14 @@ export default Profile = ({ userId }) => {
         });
 
         if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
+            setProfilePic(result.assets[0].uri);
+            addUser(userId, userName, result.assets[0].uri);
         }
-    };
+    }
 
     const removeImage = () => {
-        setSelectedImage(null);
+        setProfilePic(null);
+        addUser(userId, userName, null);
     };
 
     const computefill = (num) => {
@@ -169,17 +284,17 @@ export default Profile = ({ userId }) => {
 
             {/* Profile picture */}
             <TouchableOpacity onPress={pickImage} style={styles.profileCircle}>
-                {selectedImage ? (
-                    <Image source={{ uri: selectedImage }} style={styles.circularImage} />
+                {profilePic ? (
+                    <Image source={{ uri: profilePic }} style={styles.circularImage} />
                 ) : (
                     <Ionicons name="person" size={120} color="#EEEEEE" alignSelf="center" />
                 )}
             </TouchableOpacity>
 
-            {selectedImage && (
-                
+            {profilePic && (
+
                 <TouchableOpacity onPress={removeImage} style={styles.removeButton}>
-                    <Text style={{ color: 'white', fontSize: 18, }}>Remove Image</Text>
+                    <Text style={{ color: 'white', fontSize: 18 }}>Remove Image</Text>
                 </TouchableOpacity>
             )}
 
@@ -237,6 +352,7 @@ export default Profile = ({ userId }) => {
                 onSelect={(iconName, goalName, Curr, Target) => {
                     handleIconSelect(iconName, 1, goalName, Curr, Target),
                         closeModal()
+                    addNewGoal(iconName, goalName, Curr, Target, 0);
                 }}
                 onClose={closeModal}
             />
@@ -246,6 +362,7 @@ export default Profile = ({ userId }) => {
                 onSelect={(iconName, goalName, Curr, Target) => {
                     handleIconSelect(iconName, 2, goalName, Curr, Target),
                         closeModal2()
+                    addNewGoal(iconName, goalName, Curr, Target, 1);
                 }}
                 onClose={closeModal2}
             />
@@ -255,6 +372,7 @@ export default Profile = ({ userId }) => {
                 onSelect={(iconName, goalName, Curr, Target) => {
                     handleIconSelect(iconName, 3, goalName, Curr, Target),
                         closeModal3()
+                    addNewGoal(iconName, goalName, Curr, Target, 2);
                 }}
                 onClose={closeModal3}
             />
@@ -307,52 +425,52 @@ export default Profile = ({ userId }) => {
                 {/* Add button */}
                 <View style={styles.addButtonContainer}>
                     <TouchableOpacity onPress={toggleModalStats}>
-                        <Ionicons name="add-circle" size={50} color="#EEEEEE" />
+                        <Ionicons name="add-circle" size={50} color="#00ADB5" />
                     </TouchableOpacity>
-                    <Modal
-                        animationType="slide"
-                        transparent={true}
-                        visible={modalVisible4}
-                        onRequestClose={closeModalStats}
-                    >
-                        <View style={styles.modalContainer}>
-                            <View style={styles.modalView}>
-                                <TextInput
-                                    style={styles.textInput}
-                                    value={textInputValue}
-                                    placeholder="Enter your stat"
-                                    placeholderTextColor={'#303841'}
-                                    onChangeText={updateStats}
-                                    onSubmitEditing={closeModalStats}
-                                />
-                                <View style={styles.buttonsContainer}>
-                                    <View style={styles.addButton}>
-                                        <Pressable onPress={closeModalStats}>
-                                            <Text style={
-                                                {
-                                                    color: 'white',
-                                                    textAlign: 'center',
-                                                    fontSize: 20,
-                                                }
-                                            }>Submit</Text>
-                                        </Pressable>
-                                    </View>
-                                    <View style={styles.closeButton}>
-                                        <Pressable onPress={closeModalStats}>
-                                            <Text style={
-                                                {
-                                                    color: 'white',
-                                                    textAlign: 'center',
-                                                    fontSize: 20,
-                                                }
-                                            }>Close</Text>
-                                        </Pressable>
-                                    </View>
+                </View>
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={modalVisible4}
+                    onRequestClose={closeModalStats}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalView}>
+                            <TextInput
+                                style={styles.textInput}
+                                value={textInputValue}
+                                placeholder="Enter your stat"
+                                placeholderTextColor={'#303841'}
+                                onChangeText={updateStats}
+                                onSubmitEditing={addModalStats}
+                            />
+                            <View style={styles.buttonsContainer}>
+                                <View style={styles.addButton}>
+                                    <Pressable onPress={addModalStats}>
+                                        <Text style={
+                                            {
+                                                color: 'white',
+                                                textAlign: 'center',
+                                                fontSize: 20,
+                                            }
+                                        }>Submit</Text>
+                                    </Pressable>
+                                </View>
+                                <View style={styles.closeButton}>
+                                    <Pressable onPress={closeModalStats}>
+                                        <Text style={
+                                            {
+                                                color: 'white',
+                                                textAlign: 'center',
+                                                fontSize: 20,
+                                            }
+                                        }>Close</Text>
+                                    </Pressable>
                                 </View>
                             </View>
                         </View>
-                    </Modal>
-                </View>
+                    </View>
+                </Modal>
             </View>
         </View>
     );
@@ -392,7 +510,8 @@ const styles = StyleSheet.create({
         height: 30,
         width: '50%',
         alignSelf: 'center',
-      },
+        justifyContent: 'center',
+    },
     userName: {
         paddingTop: "3%",
         fontSize: 25,
@@ -428,6 +547,7 @@ const styles = StyleSheet.create({
         marginTop: "5%",
         marginLeft: "5%",
         marginRight: "5%",
+
     },
     buttonsContainer: {
         marginTop: 20,
@@ -442,6 +562,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#089000',
         width: '50%',
         alignSelf: 'center',
+        marginRight: 10,
     },
     closeButton: {
         borderRadius: 20,
@@ -450,33 +571,36 @@ const styles = StyleSheet.create({
         backgroundColor: '#8B0000',
         width: '50%',
         alignSelf: 'center',
+
     },
     container: {
         flex: 1,
         flexDirection: 'row',
-        justifyContent: 'space-between',
         paddingTop: "5%",
+        paddingLeft: "5%",
     },
     scrollableContainer: {
-        height: "60%",
+        height: "80%",
         backgroundColor: '#EEEEEE',
         width: "75%",
         borderRadius: 15,
     },
     statsContainer: {
         marginTop: 10,
-        marginLeft: 20,
+        marginLeft: 10,
     },
     statItem: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         padding: 10,
+        fontFamily: "Helvetica Neue",
         fontSize: 16,
         color: '#303841',
     },
     addButtonContainer: {
-        paddingLeft: "11%",
-        paddingRight: "11%",
+        position: 'absolute',
+        right: "5%",
+        top: "25%",
     },
     icon: {
         position: 'absolute',
@@ -504,8 +628,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         elevation: 5,
-        width: '80%',  // Adjust the width to your desired size
-        alignSelf: 'center',  // Center the modal horizontally
-        marginTop: '50%',  // Adjust the marginTop to position the modal vertically
+        width: '80%',
+        alignSelf: 'center',
+        marginTop: '50%',
     },
 });

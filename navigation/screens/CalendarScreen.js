@@ -290,7 +290,7 @@ export default function CalendarScreen({ userId } ) {
         const fetchUserData = async () => {
             try { 
                 const userData = await fetchUser(userId);
-                setUserName(userData)
+                setUserName(userData.name)
             } catch (error) {
                 console.error("Error fetching user name: ", error);
             }

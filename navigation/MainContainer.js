@@ -58,7 +58,9 @@ export default function MainContainer({ userId }) {
             <Tab.Screen name={profileName} options={{ headerShown: false }}>
                 {(props) => <Profile {...props} userId={userId} />}
             </Tab.Screen>
-            <Tab.Screen name={squadsName} component={Squads} options={{ headerShown: false }}/>
+            <Tab.Screen name={squadsName} options={{ headerShown: false }}>
+                {(props) => <Squads {...props} userId={userId} />}
+            </Tab.Screen>
             <Tab.Screen name={calendarName} options={{ headerShown: false }}>
                 {(props) => <CalendarScreen {...props} userId={userId} />}
             </Tab.Screen>

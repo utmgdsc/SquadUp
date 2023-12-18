@@ -19,7 +19,6 @@ export default function CalendarScreen({ userId } ) {
     const [events, setEvents] = React.useState({});
     const [newEventAdded, setNewEventAdded] = React.useState(true);
     const [isLoading, setIsLoading] = React.useState(true);
-    console.log(userId)
     const eventTypes = [
         { label: 'Sport', value: 'Sport' },
         { label: 'Workout', value: 'Workout' }

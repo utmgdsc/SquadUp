@@ -2,8 +2,6 @@ import { collection, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getD
 import { db } from './firebaseConfig';
 import * as Crypto from 'expo-crypto';
 
-
-
 /* 
 Add Functions - To create new documents inside the database,
 these are all used with parameters      

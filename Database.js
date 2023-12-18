@@ -36,34 +36,13 @@ export async function addGoal(goalname, current, target) {
 // DateTime must be a Timestamp object
 // Example for Dec25, 2023: addEvent("Drop-in Boxing", "Sports", Timestamp.fromDate(new Date("2023-03-25")));
 export async function addEvent(eventname, type, DateTime) {
-    const array = eventname.concat(DateTime);
-    const digest = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA512,
-        array
-    );
-    console.log(digest);
- 
-    // Get a reference to the document
-    const docRef = doc(db, "events", digest);
- 
-    // Get the document
-    const docSnap = await getDoc(docRef);
- 
-    // Check if the document exists
-    if (docSnap.exists()) {
-        // If the document exists, return a string indicating that the event already exists
-        console.log("Event already exists")
-        return "Event already exists";
-    } else {
-        // If the document does not exist, add the event
-        await setDoc(docRef, {
-            name: eventname,
-            type: type,
-            DateTime: DateTime
-        });
-        return digest;
-    }
- }
+    const docRef = await addDoc(collection(db, "events"), {
+        name: eventname,
+        type: type,
+        DateTime: DateTime
+    });
+    return docRef.id;
+}
 
 export function addFriend(userid1, userid2) {
     let doc_name = userid1 + "_" + userid2;
@@ -101,12 +80,28 @@ export function joinUsertoGoal(uid, goalID, startDate, endDate) {
     });
 }
 
-export function joinUsertoEvent(uid, eventID) {
+export async function joinUsertoEvent(uid, eventID) {
     let doc_name = uid + "_" + eventID;
-    setDoc(doc(db, "users_events_join", doc_name), {
-        userID: uid,
-        eventID: eventID,
-    });
+
+    // Get a reference to the document
+    const docRef = doc(db, "users_events_join", doc_name);
+
+    // Get the document
+    const docSnap = await getDoc(docRef);
+
+    // Check if the document exists
+    if (docSnap.exists()) {
+        // If the document exists, return a string indicating that the event already exists
+        console.log("User has already joined this event")
+        return 1;
+    } else {
+        // If the document does not exist, add the event
+        await setDoc(doc(db, "users_events_join", doc_name), {
+            userID: uid,
+            eventID: eventID,
+        });
+        return 0;
+    }
 }
 
 export function joinSquadtoGoal(squadID, goalID, startDate, endDate) {
@@ -158,16 +153,16 @@ export async function fetchUser(uid) {
     return name[0];
 }
 
+// This one looks at events
 export async function fetchUserEvents(uid) {
     const eventID_list = []
     const eventList = []
-
+    console.log(uid);
     const userEventsRef = collection(db, "users_events_join");
     const q = query(userEventsRef, where("userID", "==", uid));
 
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
-        //console.log(doc.id, " => ", doc.data().eventID);
         eventID_list.push(doc.data().eventID)
     })
 
@@ -184,16 +179,50 @@ export async function fetchUserEvents(uid) {
     return eventList;
 }
 
+// This one looks at drop in events
+export async function fetchUserDropInEvents(uid) {
+    const eventID_list = []
+    const eventList = []
+    console.log(uid);
+    const userEventsRef = collection(db, "users_events_join");
+    const q = query(userEventsRef, where("userID", "==", uid));
+
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        eventID_list.push(doc.data().eventID)
+    })
+
+    const EventsRef = collection(db, "Drop_In_Events");
+    for (i = 0; i < eventID_list.length; i++) {
+        const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach((doc) => {
+            const data = doc.data();
+            const event = {
+                title: data.date,
+                activityName: `${data.name}: ${data.location}`,
+                time: data.time,
+                id: eventID_list[i],
+            };
+            eventList.push(event);
+        })
+    }
+
+    console.log(eventList);
+    return eventList;
+}
+
 export async function fetchDropInEvents() {
     let eventsMap = [];
 
-    const eventsSnapshot = await getDocs(collectionGroup(db, 'Events'));
+    const eventsSnapshot = await getDocs(collectionGroup(db, 'Drop_In_Events'));
     eventsSnapshot.forEach((doc) => {
         const data = doc.data();
         const event = {
-            title: doc.ref.parent.parent.id,
-            activityName: `${data.Name}: ${data.Location}`,
-            time: data.Time,
+            title: data.date,
+            activityName: `${data.name}: ${data.location}`,
+            time: data.time,
+            id: doc.id,
         };
         eventsMap.push(event);
     });
@@ -251,7 +280,6 @@ export async function fetchSquadEvents(squadID) {
 
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
-        //console.log(doc.id, " => ", doc.data().eventID);
         eventID_list.push(doc.data().eventID)
     })
 
@@ -260,7 +288,7 @@ export async function fetchSquadEvents(squadID) {
         const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
-            console.log(doc.id, " => ", doc.data());
+            doc.id, " => ", doc.data();
             eventList.push(doc.data());
         })
     }

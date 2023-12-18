@@ -3,10 +3,11 @@ import { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import EventComponent from '../components/EventComponent';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { fetchDropInEvents } from '../../Database';
+import { fetchDropInEvents, fetchUserDropInEvents } from '../../Database';
 
 export default function Events({ userId }) {
     const [events, setEvents] = React.useState([]);
+    const [userEvents, setUserEvents] = React.useState([]);
     const [dayList, setDayList] = React.useState(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']);
     const [openDayList, setOpenDayList] = React.useState(false);
     const [valueDayList, setValueDayList] = React.useState([]);
@@ -55,7 +56,7 @@ export default function Events({ userId }) {
                 const events = await fetchDropInEvents();
                 setEvents(events);
             } catch (error) {
-                console.error("Error fetching user's squads: ", error);
+                console.error("Error fetching user's events: ", error);
             }
         }
         fetchandLogDropInEvents();
@@ -123,6 +124,7 @@ export default function Events({ userId }) {
                 />
             </View>
             {/* ScrollView for the list of events */}
+
             <ScrollView>
                 {filteredEvents.map((event, index) => (
                     <EventComponent
@@ -131,6 +133,7 @@ export default function Events({ userId }) {
                         activityName={event.activityName}
                         time={event.time}
                         userId={userId}
+                        eventId={event.id}
                     />
                 ))}
             </ScrollView>

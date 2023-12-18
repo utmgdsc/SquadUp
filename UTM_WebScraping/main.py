@@ -85,7 +85,7 @@ def webscrape_logic():
 
     try:
         while not stop:
-            
+
             # Load the webpage
             url = 'https://utmeagles.loxi.io/list/future/' + str(offset)
             driver.get(url)
@@ -99,7 +99,7 @@ def webscrape_logic():
                 return False, events_dict
             except NoSuchElementException:
                 return False, events_dict
-            
+
 
 
             # Wait for the specific time element to appear
@@ -174,9 +174,13 @@ def sendevents(events_dict):
         for event in events:
             event_name, event_time, event_location = event
             # print(f"Date: {date}, Name: {event_name}, Time: {event_time}, Location: {event_location}")
-            db.collection('Drop_In_Events').document(date).collection('Events').add(
-                {'Name': event_name, 'Time': event_time,
-                 'Location': event_location})
+            data = {'date':date, 'name':event_name, 'time':event_time, 'location':event_location}
+            db.collection('Drop_In_Events').add(data)
+
+            # Alt Database code:
+            # db.collection('LastTest_Drop_In_Events').document(date).collection('TEvents').add(
+            #     {'Name': event_name, 'Time': event_time,
+            #      'Location': event_location})
 
 
 if __name__ == '__main__':

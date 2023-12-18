@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, ScrollView, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Button, ScrollView, TouchableOpacity, TextInput, Modal, Alert, RefreshControl } from 'react-native';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import { Table, Row } from 'react-native-table-component';
 import DropDownPicker from 'react-native-dropdown-picker';
-import { addEvent, fetchSquadEvents, fetchSquadName, fetchSquadsForUser, fetchUserEvents, joinSquadtoEvent, joinUsertoEvent, fetchSquadGoals, addSquad, joinUsertoSquad, updateGoalCurrentValue, joinSquadtoGoal, addGoal, deleteSquadGoal } from '../../Database';
+import { addEvent, fetchSquadEvents, fetchSquadName, fetchSquadsForUser, fetchUserEvents, joinSquadtoEvent, joinUsertoEvent, fetchSquadGoals, addSquad, joinUsertoSquad, updateGoalCurrentValue, joinSquadtoGoal, addGoal, deleteSquadGoal, fetchSquadEventsforMainScreen } from '../../Database';
 import * as Clipboard from 'expo-clipboard';
 import { RootSiblingParent } from 'react-native-root-siblings';
 import Toast from 'react-native-root-toast';
@@ -79,17 +79,17 @@ export default function Squads({ userId }) {
             const userGoals = await fetchSquadGoals(activeSquadID);
             const goalList = userGoals[0];
             const goalIdList = userGoals[1];
-    
+
             setGoalIdList(goalIdList);
-    
+
             let updatedGoalNameList = [];
             let updatedCurrentNumberList = [];
             let updatedTargetNumberList = [];
-            let updatedIcons = [null, null, null]; 
-    
+            let updatedIcons = [null, null, null];
+
             goalList.forEach((goal, index) => {
                 const { current, icon, name, target } = goal;
- 
+
                 if (index === 0) {
                     updatedIcons[0] = icon;
                 } else if (index === 1) {
@@ -97,32 +97,32 @@ export default function Squads({ userId }) {
                 } else if (index === 2) {
                     updatedIcons[2] = icon;
                 }
-    
+
                 updatedGoalNameList.push(name);
                 updatedCurrentNumberList.push(current);
                 updatedTargetNumberList.push(target);
             });
-                const defaultIcon = 'add';
+            const defaultIcon = 'add';
             if (goalList.length === 0) {
                 updatedIcons[0] = defaultIcon;
                 updatedIcons[1] = defaultIcon;
                 updatedIcons[2] = defaultIcon;
-            } 
+            }
             else if (goalList.length === 1) {
                 updatedIcons[1] = defaultIcon;
                 updatedIcons[2] = defaultIcon;
             } else if (goalList.length === 2) {
                 updatedIcons[2] = defaultIcon;
-            } 
-    
+            }
+
             setGoalNameList(updatedGoalNameList);
             setCurrentNumberList(updatedCurrentNumberList);
             setTargetNumberList(updatedTargetNumberList);
-    
+
             setSelectedIcon1(updatedIcons[0]);
             setSelectedIcon2(updatedIcons[1]);
             setSelectedIcon3(updatedIcons[2]);
-    
+
         } catch (error) {
             console.error('Error loading user goals:', error);
         }
@@ -420,9 +420,67 @@ export default function Squads({ userId }) {
         fetchUserSquads();
     }, []);
 
+    const [nextEvent, setNextEvent] = useState('Rest Day');
+    const [nextEventParts, setNextEventParts] = useState(['Rest Day', ''])
+    const [events, setEvents] = useState([]);
+    const fetchEvents = async () => {
+        try {
+            const events = await fetchSquadEventsforMainScreen(activeSquadID);
+            setEvents(events);
+            const currentDate = new Date();
+            const formattedCurrentDate = currentDate.toISOString().split('T')[0];
+            if (events.length === 0) {
+                setNextEvent('Rest Day');
+            } else {
+                for (let event of events) {
+                    let eventDate = new Date(event.DateTime);
+                    let formattedEventDate = eventDate.toISOString().split('T')[0];
+                    if (formattedEventDate == formattedCurrentDate) {
+                        setNextEvent(event.name);
+                        break;
+                    }
+                }
+            }
+
+        } catch (error) {
+            console.error("Error fetching squad's events: ", error);
+        }
+    }
+    useEffect(() => {
+        fetchEvents();
+    }, []);
+
+    useEffect(() => {
+        // Split nextEvent into parts
+        setNextEventParts(nextEvent.split(":"));
+    }, [nextEvent]);
+
+    const [refreshing, setRefreshing] = useState(false);
+    const scrollRef = useRef();
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        fetchEvents();
+    }, []);
+
+    useEffect(() => {
+        if (!refreshing) {
+            return;
+        }
+        fetchEvents().then(() => {
+            setRefreshing(false);
+        });
+    }, [refreshing]);
+
     return (
         <RootSiblingParent>
-            <ScrollView style={styles.scrollView}>
+            <ScrollView
+                ref={scrollRef}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }
+                style={styles.scrollView}
+            >
                 <View style={styles.container}>
                     {/* Drop-down section */}
                     <View style={styles.dropdownContainer}>
@@ -468,31 +526,15 @@ export default function Squads({ userId }) {
                     <Text style={styles.shareCaption}>Share this ID with your friends to add them to your squad!</Text>
 
                     <Text style={styles.title}> {activeSquad} Weekly Activity </Text>
-                    <ScrollView horizontal={true} style={styles.tableContainer}>
-                        <View>
-                            <Table borderStyle={{ borderWidth: 1, borderColor: '#00ADB5' }}>
-                                <Row
-                                    data={data.tableHead}
-                                    widthArr={data.widthArr}
-                                    style={styles.head}
-                                    textStyle={styles.headText}
-                                />
-                            </Table>
-                            <ScrollView>
-                                <Table borderStyle={{ borderWidth: 1, borderColor: '#00ADB5' }}>
-                                    {data.tableData.map((rowData, index) => (
-                                        <Row
-                                            key={index}
-                                            data={rowData}
-                                            widthArr={data.widthArr}
-                                            style={styles.rowSection}
-                                            textStyle={styles.text}
-                                        />
-                                    ))}
-                                </Table>
-                            </ScrollView>
-                        </View>
-                    </ScrollView>
+
+                    <View style={styles.eventContainer}>
+                        <Text style={styles.eventTitle}>Upcoming Event</Text>
+                        <Text style={styles.eventDetails}>{typeof nextEventParts[0] === 'undefined' ? 'No upcoming events, enjoy your rest day!' :
+                            nextEventParts[0] == 'Rest Day' ? 'No upcoming events, enjoy your rest day!' : 
+                            typeof nextEventParts[1] === 'undefined' ? `${nextEventParts[0]}` :
+                            `${nextEventParts[0]} at ${nextEventParts[1]}`}</Text>
+                    </View>
+
                     <Text style={styles.bottom}>{activeSquad}'s Milestones </Text>
                     <View style={styles.horizontalContainer}>
                         <TouchableOpacity style={styles.button1} onPress={toggleModal}>
@@ -790,5 +832,27 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         marginBottom: 20,
         marginTop: 25,
+    },
+    eventContainer: {
+        alignSelf: 'center',
+        marginBottom: 40, 
+        borderRadius: 10,
+        backgroundColor: '#EEEEEE',
+        paddingLeft: 20,
+        paddingRight: 20,
+        paddingTop: 10,
+        paddingBottom: 10,
+        width: '90%',
+        //height: '30%',
+    },
+    eventTitle: {
+        fontSize: 40,
+        fontWeight: 'bold',
+        color: '#303841',
+    },
+    eventDetails: {
+        fontSize: 30,
+        fontWeight: 'bold',
+        color: '#00ADB5',
     },
 });

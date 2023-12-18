@@ -1,5 +1,6 @@
 import { collection, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getDoc, documentId, collectionGroup } from "firebase/firestore";
 import { db } from './firebaseConfig';
+import * as Crypto from 'expo-crypto';
 
 /* 
 Add Functions - To create new documents inside the database,
@@ -35,13 +36,34 @@ export async function addGoal(goalname, current, target) {
 // DateTime must be a Timestamp object
 // Example for Dec25, 2023: addEvent("Drop-in Boxing", "Sports", Timestamp.fromDate(new Date("2023-03-25")));
 export async function addEvent(eventname, type, DateTime) {
-    const docRef = await addDoc(collection(db, "events"), {
-        name: eventname,
-        type: type,
-        DateTime: DateTime
-    });
-    return docRef.id;
-}
+    const array = eventname.concat(DateTime);
+    const digest = await Crypto.digestStringAsync(
+        Crypto.CryptoDigestAlgorithm.SHA512,
+        array
+    );
+    console.log(digest);
+ 
+    // Get a reference to the document
+    const docRef = doc(db, "events", digest);
+ 
+    // Get the document
+    const docSnap = await getDoc(docRef);
+ 
+    // Check if the document exists
+    if (docSnap.exists()) {
+        // If the document exists, return a string indicating that the event already exists
+        console.log("Event already exists")
+        return "Event already exists";
+    } else {
+        // If the document does not exist, add the event
+        await setDoc(docRef, {
+            name: eventname,
+            type: type,
+            DateTime: DateTime
+        });
+        return digest;
+    }
+ }
 
 export function addFriend(userid1, userid2) {
     let doc_name = userid1 + "_" + userid2;
@@ -154,7 +176,7 @@ export async function fetchUserEvents(uid) {
         const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
-            console.log(doc.id, " => ", doc.data());
+            doc.id, " => ", doc.data();
             eventList.push(doc.data());
         })
     }

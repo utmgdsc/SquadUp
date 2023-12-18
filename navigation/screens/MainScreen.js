@@ -16,7 +16,6 @@ export default function MainScreen({ userId }) {
             try {
                 const events = await fetchUserEvents(userId);
                 setEvents(events);
-                console.log(events);
             } catch (error) {
                 console.error("Error fetching user's events: ", error);
             }
@@ -37,9 +36,7 @@ export default function MainScreen({ userId }) {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Welcome back, {username}</Text>
-            <View style={styles.nextEventContainer}>
-                <Text style={styles.nextEventText}>{`Your next event: ${nextEvent}`}</Text>
-            </View>
+            <Text style={styles.subtitle}>{`Your next event: ${nextEvent}`}</Text>
         </View>
     );
 }
@@ -59,7 +56,11 @@ const styles = StyleSheet.create({
         color: '#7189A4',
     },
     subtitle: {
-        fontSize: 20,
+        fontSize: 50,
+        fontWeight: 'bold',
+        marginBottom: 50,
+        marginTop: 100,
+        color: '#EEEEEE',
     },
     nextEventContainer: {
         marginTop: 20,

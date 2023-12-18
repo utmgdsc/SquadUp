@@ -1,4 +1,4 @@
-import { collection, deleteDoc, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getDoc, documentId } from "firebase/firestore";
+import { collection, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getDoc, documentId, collectionGroup, deleteDoc } from "firebase/firestore"
 import { db } from './firebaseConfig';
 
 
@@ -192,13 +192,12 @@ export async function fetchUser(uid) {
 export async function fetchUserEvents(uid) {
     const eventID_list = []
     const eventList = []
-
+    console.log(uid);
     const userEventsRef = collection(db, "users_events_join");
     const q = query(userEventsRef, where("userID", "==", uid));
 
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
-        //console.log(doc.id, " => ", doc.data().eventID);
         eventID_list.push(doc.data().eventID)
     })
 
@@ -207,6 +206,7 @@ export async function fetchUserEvents(uid) {
         const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
+            doc.id, " => ", doc.data();
             eventList.push(doc.data());
         })
     }
@@ -269,6 +269,7 @@ export async function fetchSquadEvents(squadID) {
         const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
+            doc.id, " => ", doc.data();
             eventList.push(doc.data());
         })
     }

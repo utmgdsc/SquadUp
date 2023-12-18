@@ -19,24 +19,24 @@ export default function MainScreen({ userId }) {
             setEvents(events);
             const currentDate = new Date();
             const formattedCurrentDate = currentDate.toISOString().split('T')[0];
-            if (events.length === 0){
+            if (events.length === 0) {
                 setNextEvent('Rest Day');
             } else {
                 for (let event of events) {
                     let eventDate = new Date(event.DateTime);
                     let formattedEventDate = eventDate.toISOString().split('T')[0];
                     if (formattedEventDate == formattedCurrentDate) {
-                       setNextEvent(event.name);
-                       break;
+                        setNextEvent(event.name);
+                        break;
                     }
                 }
             }
-            
+
         } catch (error) {
             console.error("Error fetching user's events: ", error);
         }
     }
- 
+
     useEffect(() => {
         fetchEvents();
     }, []);
@@ -75,7 +75,10 @@ export default function MainScreen({ userId }) {
                 <Text style={styles.title}>Welcome back, {username}</Text>
                 <View style={styles.eventContainer}>
                     <Text style={styles.eventTitle}>Upcoming Event</Text>
-                    <Text style={styles.eventDetails}>{nextEventParts[0] == 'Rest Day' ? 'No upcoming events, enjoy your rest day!' : `${nextEventParts[0]} at ${nextEventParts[1]}`}</Text>
+                    <Text style={styles.eventDetails}>{typeof nextEventParts[0] === 'undefined' ? 'No upcoming events, enjoy your rest day!' :
+                        nextEventParts[0] == 'Rest Day' ? 'No upcoming events, enjoy your rest day!' :
+                            typeof nextEventParts[1] === 'undefined' ? `${nextEventParts[0]}` :
+                                `${nextEventParts[0]} at ${nextEventParts[1]}`}</Text>
                 </View>
             </View>
         </ScrollView>

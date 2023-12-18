@@ -1,35 +1,90 @@
-import { collection, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getDoc, documentId } from "firebase/firestore";
+import { collection, deleteDoc, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getDoc, documentId } from "firebase/firestore";
 import { db } from './firebaseConfig';
+
 
 /* 
 Add Functions - To create new documents inside the database,
 these are all used with parameters      
 */
 
-export function addUser(uid, username) {
+export function addUser(uid, username, profilePicURL) {
+    if (profilePicURL === undefined) {
+        profilePicURL = null;
+    }
+
     setDoc(doc(db, "users", uid), {
-        name: username
+        name: username,
+        profilePic: profilePicURL,
     });
 }
+
 
 export async function addSquad(squadname) {
     const docRef = await addDoc(collection(db, "squads"), {
         name: squadname
     });
-    // console.log("In docref, this is the id: ", docRef.id);
     return docRef.id;
 }
 
 // returns newly-created goal's id
-export async function addGoal(goalname, current, target) {
+export async function addGoal(goalname, current, target, iconName) {
+
     const docRef = await addDoc(collection(db, "goals"), {
         name: goalname,
         current: current,
-        target: target
+        target: target,
+        icon: iconName, 
     });
-    console.log(docRef.id)
     return docRef.id;
 }
+
+export async function deleteUserGoal(userId, goalId) {
+    try {
+        // Delete the goal document
+        const goalDocRef = doc(db, 'goals', goalId);
+        await deleteDoc(goalDocRef);
+
+        // Remove the goal ID from the user's goals list
+        const doc_name = userId + "_" + goalId;
+        const userGoalsDocRef = doc(db, 'users_goals_join', doc_name);
+        
+        // Delete the document with the specified title
+        await deleteDoc(userGoalsDocRef);
+    } catch (error) {
+        console.error('Error deleting goal:', error);
+        throw error;
+    }
+};
+
+
+export async function deleteSquadGoal(squadId, goalId) {
+    try {
+        // Delete the goal document
+        const goalDocRef = doc(db, 'goals', goalId);
+        await deleteDoc(goalDocRef);
+
+        // Remove the goal ID from the user's goals list
+        const doc_name = squadId + "_" + goalId;
+        const userGoalsDocRef = doc(db, 'squad_goals_join', doc_name);
+        
+        // Delete the document with the specified title
+        await deleteDoc(userGoalsDocRef);
+    } catch (error) {
+        console.error('Error deleting goal:', error);
+        throw error;
+    }
+};
+
+
+export const updateGoalCurrentValue = async (goalId, newValue) => {
+    try {
+        const goalDocRef = doc(db, 'goals', goalId);
+        await setDoc(goalDocRef, { current: newValue }, { merge: true });
+    } catch (error) {
+        console.error('Error updating goal current value:', error);
+        throw error;
+    }
+};
 
 // type can only have two values: Sports or Workout
 // DateTime must be a Timestamp object
@@ -69,13 +124,11 @@ DateTime must be a Timestamp object
 Example for Dec25 to Dec29, 2023: 
 joinUsertoGoal([some uid], [some goalID], Timestamp.fromDate(new Date("2023-03-25")), Timestamp.fromDate(new Date("2023-03-29")));
 */
-export function joinUsertoGoal(uid, goalID, startDate, endDate) {
+export function joinUsertoGoal(uid, goalID) {
     let doc_name = uid + "_" + goalID;
     setDoc(doc(db, "users_goals_join", doc_name), {
         userID: uid,
         goalID: goalID,
-        startDate: startDate,
-        endDate: endDate,
     });
 }
 
@@ -87,13 +140,11 @@ export function joinUsertoEvent(uid, eventID) {
     });
 }
 
-export function joinSquadtoGoal(squadID, goalID, startDate, endDate) {
+export function joinSquadtoGoal(squadID, goalID) {
     let doc_name = squadID + "_" + goalID;
     setDoc(doc(db, "squad_goals_join", doc_name), {
         squadID: squadID,
         goalID: goalID,
-        startDate: startDate,
-        endDate: endDate,
     });
 }
 
@@ -127,13 +178,15 @@ these are used to retrieve data about specific users, squads, etc.
 
 export async function fetchUser(uid) {
     const name = [];
+    const profilePic = []; 
     const userRef = collection(db, "users");
     const q = query(userRef, where(documentId(), "==", uid));
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
         name.push(doc.data().name);
+        profilePic.push(doc.data().profilePic); 
     })
-    return name[0];
+    return { name: name[0], profilePic: profilePic[0] }; 
 }
 
 export async function fetchUserEvents(uid) {
@@ -154,7 +207,6 @@ export async function fetchUserEvents(uid) {
         const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
-            console.log(doc.id, " => ", doc.data());
             eventList.push(doc.data());
         })
     }
@@ -178,7 +230,6 @@ export async function fetchUserGoals(uid) {
 
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
-        //console.log(doc.id, " => ", doc.data().eventID);
         goalID_list.push(doc.data().goalID)
     })
 
@@ -187,12 +238,11 @@ export async function fetchUserGoals(uid) {
         const q2 = query(GoalsRef, where(documentId(), "==", goalID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
-            console.log(doc.id, " => ", doc.data());
             goalList.push(doc.data());
         })
     }
 
-    return goalList;
+    return [goalList, goalID_list];
 }
 
 /* given squadID, returns a list of events with the format - 
@@ -211,7 +261,6 @@ export async function fetchSquadEvents(squadID) {
 
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
-        //console.log(doc.id, " => ", doc.data().eventID);
         eventID_list.push(doc.data().eventID)
     })
 
@@ -220,7 +269,6 @@ export async function fetchSquadEvents(squadID) {
         const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
-            console.log(doc.id, " => ", doc.data());
             eventList.push(doc.data());
         })
     }
@@ -244,7 +292,6 @@ export async function fetchSquadGoals(squadID) {
 
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
-        //console.log(doc.id, " => ", doc.data().eventID);
         goalID_list.push(doc.data().goalID)
     })
 
@@ -253,12 +300,11 @@ export async function fetchSquadGoals(squadID) {
         const q2 = query(GoalsRef, where(documentId(), "==", goalID_list[i]));
         const querySnapshot2 = await getDocs(q2);
         querySnapshot2.forEach((doc) => {
-            console.log(doc.id, " => ", doc.data());
             goalList.push(doc.data());
         })
     }
 
-    return goalList;
+    return [goalList, goalID_list];
 }
 
 export async function fetchSquadName(squadID) {
@@ -289,8 +335,6 @@ export async function fetchSquadsForUser(uid) {
                 squadName: squadName
             };
             squadList.push(squadInfo);
-        } else {
-            // console.error("Squad with ID ${squadID} does not exist");
         }
     };
     return squadList;

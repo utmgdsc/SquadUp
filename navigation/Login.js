@@ -19,8 +19,8 @@ const Login = ({ navigation }) => {
     const signIn = async () => {
         setLoading(true);
         try {
-            email.trim();
-            password.trim();
+            // email.trim();
+            // password.trim();
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             alert("Login successful");
 
@@ -45,7 +45,7 @@ const Login = ({ navigation }) => {
             <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
                     
                         <TextInput value = {email} style={styles.textBox} placeholder="Email" autoCapitalize="none"
-                        onChangeText={(text) => setEmail(text)}> 
+                        onChangeText={(text) => setEmail(text.trimEnd())}> 
                         </TextInput>
                         <TextInput secureTextEntry={true} value= {password} style={styles.textBox} placeholder="Password" autoCapitalize="none"
                         onChangeText={(text) => setPassword(text)}>

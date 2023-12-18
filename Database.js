@@ -377,6 +377,37 @@ export async function fetchSquadEvents(squadID) {
     return eventList;
 }
 
+// This one looks at events for main screen (date time needed)
+export async function fetchSquadEventsforMainScreen(uid) {
+    const eventID_list = []
+    const eventList = []
+    console.log(uid);
+    const userEventsRef = collection(db, "squad_events_join");
+    const q = query(userEventsRef, where("squadID", "==", uid));
+ 
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        eventID_list.push(doc.data().eventID)
+    })
+ 
+    const EventsRef = collection(db, "events");
+    for (let i = 0; i < eventID_list.length; i++) {
+        const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach((doc) => {
+            // Convert Firestore Timestamp to JavaScript Date
+            const DateTime = doc.data().DateTime.toDate();
+            // Include DateTime in the data
+            eventList.push({
+                ...doc.data(),
+                DateTime: DateTime
+            });
+        })
+    }
+ 
+    return eventList;
+ }
+
 /* given squadID, returns a list of goals with the format - 
     [
         {"completed": false, "current": 0, "name": "Run 10km this week.", "target": 10}, 

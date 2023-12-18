@@ -132,12 +132,28 @@ export function joinUsertoGoal(uid, goalID) {
     });
 }
 
-export function joinUsertoEvent(uid, eventID) {
+export async function joinUsertoEvent(uid, eventID) {
     let doc_name = uid + "_" + eventID;
-    setDoc(doc(db, "users_events_join", doc_name), {
-        userID: uid,
-        eventID: eventID,
-    });
+
+    // Get a reference to the document
+    const docRef = doc(db, "users_events_join", doc_name);
+
+    // Get the document
+    const docSnap = await getDoc(docRef);
+
+    // Check if the document exists
+    if (docSnap.exists()) {
+        // If the document exists, return a string indicating that the event already exists
+        console.log("User has already joined this event")
+        return 1;
+    } else {
+        // If the document does not exist, add the event
+        await setDoc(doc(db, "users_events_join", doc_name), {
+            userID: uid,
+            eventID: eventID,
+        });
+        return 0;
+    }
 }
 
 export function joinSquadtoGoal(squadID, goalID) {
@@ -189,6 +205,7 @@ export async function fetchUser(uid) {
     return { name: name[0], profilePic: profilePic[0] }; 
 }
 
+// This one looks at events
 export async function fetchUserEvents(uid) {
     const eventID_list = []
     const eventList = []
@@ -213,6 +230,89 @@ export async function fetchUserEvents(uid) {
 
     return eventList;
 }
+
+// This one looks at events for main screen (date time needed)
+export async function fetchUserEventsforMainScreen(uid) {
+    const eventID_list = []
+    const eventList = []
+    console.log(uid);
+    const userEventsRef = collection(db, "users_events_join");
+    const q = query(userEventsRef, where("userID", "==", uid));
+ 
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        eventID_list.push(doc.data().eventID)
+    })
+ 
+    const EventsRef = collection(db, "events");
+    for (let i = 0; i < eventID_list.length; i++) {
+        const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach((doc) => {
+            // Convert Firestore Timestamp to JavaScript Date
+            const DateTime = doc.data().DateTime.toDate();
+            // Include DateTime in the data
+            eventList.push({
+                ...doc.data(),
+                DateTime: DateTime
+            });
+        })
+    }
+ 
+    return eventList;
+ }
+
+// This one looks at drop in events
+export async function fetchUserDropInEvents(uid) {
+    const eventID_list = []
+    const eventList = []
+    console.log(uid);
+    const userEventsRef = collection(db, "users_events_join");
+    const q = query(userEventsRef, where("userID", "==", uid));
+
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((doc) => {
+        eventID_list.push(doc.data().eventID)
+    })
+
+    const EventsRef = collection(db, "Drop_In_Events");
+    for (i = 0; i < eventID_list.length; i++) {
+        const q2 = query(EventsRef, where(documentId(), "==", eventID_list[i]));
+        const querySnapshot2 = await getDocs(q2);
+        querySnapshot2.forEach((doc) => {
+            const data = doc.data();
+            const event = {
+                title: data.date,
+                activityName: `${data.name}: ${data.location}`,
+                time: data.time,
+                id: eventID_list[i],
+            };
+            eventList.push(event);
+        })
+    }
+
+    console.log(eventList);
+    return eventList;
+}
+
+export async function fetchDropInEvents() {
+    let eventsMap = [];
+
+    const eventsSnapshot = await getDocs(collectionGroup(db, 'Drop_In_Events'));
+    eventsSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const event = {
+            title: data.date,
+            activityName: `${data.name}: ${data.location}`,
+            time: data.time,
+            id: doc.id,
+        };
+        eventsMap.push(event);
+    });
+
+    return eventsMap;
+}
+
 
 /* given uid (user id), returns a list of goals with the format - 
     [
@@ -313,10 +413,10 @@ export async function fetchSquadName(squadID) {
     const q = query(squadNamesRef, where(documentId(), "==", squadID));
     const querySnapshot = await getDocs(q);
 
-    if(!querySnapshot.empty) {
+    if (!querySnapshot.empty) {
         return querySnapshot.docs[0].data().name;
     }
-    else{
+    else {
         // console.error("Squad with ID ${squadID} does not exist");
         return null;
     }

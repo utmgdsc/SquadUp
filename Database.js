@@ -1,5 +1,7 @@
 import { collection, addDoc, setDoc, doc, Timestamp, query, where, getDocs, getDoc, documentId, collectionGroup, deleteDoc } from "firebase/firestore"
 import { db } from './firebaseConfig';
+import * as Crypto from 'expo-crypto';
+
 
 
 /* 

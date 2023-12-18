@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet, ScrollView, Modal, Button, TextInput, Pressable } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { fetchUser, fetchUserGoals, updateGoalCurrentValue, addUser, addGoal, joinUsertoGoal, deleteUserGoal } from '../../Database';
+import { fetchUser, fetchUserGoals, updateGoalCurrentValue, addUser, addGoal, joinUsertoGoal, deleteUserGoal, addStats, fetchUserStats, deleteStat} from '../../Database';
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 import CustomIconPickerModal from '../components/CustomIconPickerModal';
 import CustomGoalUpdateModal from '../components/CustomGoalUpdateModal';
@@ -20,7 +20,7 @@ export default Profile = ({ userId }) => {
     const [goalVisible3, setgoalVisible3] = useState(false);
     const [selectedIcon1, setSelectedIcon1] = useState('add'); // Set a default icon
     const [selectedIcon2, setSelectedIcon2] = useState('add'); // Set a default icon
-    const [selectedIcon3, setSelectedIcon3] = useState('add'); // Set a default ico
+    const [selectedIcon3, setSelectedIcon3] = useState('add'); // Set a default icon
     const [statsList, setStatsList] = useState([]);
     const [goalNameList, setGoalNameList] = useState(['', '', '']);
     const [currentNumberList, setCurrentNumberList] = useState([0, 0, 0]);
@@ -30,23 +30,24 @@ export default Profile = ({ userId }) => {
     useEffect(() => {
         fetchUser(userId).then(userInfo => setProfilePic(userInfo.profilePic));
         loadUserGoals();
+        loadStats();
     }, [userId]);
 
     const addNewGoal = async (iconName, goalName, currentNumber, targetNumber, index) => {
         try {
             // Add the goal and obtain the goalId
             const goalId = await addGoal(goalName, currentNumber, targetNumber, iconName);
-    
+
             // Set the goalId in the state
             setGoalIdList((prevGoalIds) => {
                 const updatedGoalIds = [...prevGoalIds];
                 updatedGoalIds[index] = goalId;
                 return updatedGoalIds;
             });
-    
+
             // Join user to the goal
             joinUsertoGoal(userId, goalId);
-    
+
         } catch (error) {
             console.error('Error adding goal:', error);
         }
@@ -57,17 +58,17 @@ export default Profile = ({ userId }) => {
             const userGoals = await fetchUserGoals(userId);
             const goalList = userGoals[0];
             const goalIdList = userGoals[1];
-    
+
             setGoalIdList(goalIdList);
-    
+
             // Initialize temporary arrays to hold the updated values
             let updatedGoalNameList = [...goalNameList];
             let updatedCurrentNumberList = [...currentNumberList];
             let updatedTargetNumberList = [...targetNumberList];
-    
+
             goalList.forEach((goal, index) => {
                 const { current, icon, name, target } = goal;
-    
+
                 if (index === 0) {
                     updatedGoalNameList[0] = name;
                     updatedCurrentNumberList[0] = current;
@@ -96,11 +97,20 @@ export default Profile = ({ userId }) => {
             console.error('Error loading user goals:', error);
         }
     };
+    
+    const loadStats = async () => {
+        try {
+            const stats = await fetchUserStats(userId);
+            setStatsList(stats);
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    };
 
     const resetGoal = async (goalId, goalIndex) => {
         try {
             await deleteUserGoal(userId, goalId);
-            
+
             setGoalIdList((prevGoalIds) => {
                 const updatedGoalIds = [...prevGoalIds];
                 updatedGoalIds[goalIndex] = null;
@@ -125,7 +135,7 @@ export default Profile = ({ userId }) => {
                 setCurrentNumberList(currentNumberList => [currentNumberList[0], 0, currentNumberList[2]]);
                 setTargetNumberList(targetNumberList => [targetNumberList[0], 0, targetNumberList[2]]);
             }
-        
+
             else if (goalIndex == 2) {
                 setSelectedIcon3(defaultIcon);
                 setCurrentNumberList(currentNumberList => [currentNumberList[0], currentNumberList[1], 0]);
@@ -143,10 +153,15 @@ export default Profile = ({ userId }) => {
         setModalVisible4(!modalVisible4);
     };
 
-    const addModalStats = () => {
+    const addModalStats = async () => {
         if (textInputValue) {
-            setStatsList((prevStats) => [...prevStats, textInputValue]);
-            setTextInputValue(''); 
+            try {
+                await addStats(userId, textInputValue);
+                setStatsList((prevStats) => [...prevStats, textInputValue]);
+                setTextInputValue('');
+            } catch (error) {
+                console.error('Error adding stat:', error);
+            }
         }
         closeModalStats();
     };
@@ -277,6 +292,15 @@ export default Profile = ({ userId }) => {
 
         const fillValue = (currentNumber / targetNumber) * 100;
         return Math.min(Math.max(fillValue, 0), 100);
+    };
+    
+    const removeStat = (index) => {
+
+        const statToRemove = statsList[index];
+        deleteStat(userId, statToRemove);
+        const updatedStats = [...statsList];
+        updatedStats.splice(index, 1);
+        setStatsList(updatedStats);
     };
 
     return (
@@ -414,7 +438,12 @@ export default Profile = ({ userId }) => {
                         <View style={styles.statsContainer}>
                             <View style={styles.statsContainer}>
                                 {statsList.map((stat, index) => (
-                                    <Text key={index} style={styles.statItem}>{stat}</Text>
+                                    <View key={index} style={styles.statItem}>
+                                        <Text style={styles.statText}>{stat}</Text>
+                                        <TouchableOpacity onPress={() => removeStat(index)}>
+                                            <Ionicons name="close-circle" size={25} color="red" />
+                                        </TouchableOpacity>
+                                    </View>
                                 ))}
                             </View>
                         </View>
@@ -593,6 +622,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         padding: 10,
+        maxWidth: '90%',
         fontFamily: "Helvetica Neue",
         fontSize: 16,
         color: '#303841',
